@@ -1,10 +1,10 @@
-# NOVA SALUD · Documentación del trabajo final
+# NOVA SALUD · Trabajo final SENATI
 
-Curso Fullstack Developer Software · SENATI · PIAD-527.
+Curso Fullstack Developer Software · PIAD-527.
 
 ## 1. Descripción del problema
 
-La botica Nova Salud registra inventario y ventas manualmente. El crecimiento de la atención provoca errores en las existencias, desabastecimiento de medicamentos y tiempos prolongados de registro. La información dispersa dificulta conocer los productos disponibles y decidir qué reponer.
+La botica Nova Salud controla existencias y ventas manualmente. Su crecimiento provoca errores de inventario, desabastecimiento y tiempos prolongados de atención. La información dispersa impide conocer con rapidez los productos disponibles y decidir qué reponer.
 
 ## 2. Objetivo general
 
@@ -12,74 +12,63 @@ Implementar un software web que permita gestionar de forma centralizada y automa
 
 ## 3. Propuesta de solución
 
-La aplicación organiza el trabajo en cinco pantallas: resumen general, inventario, alertas, nueva venta e historial. La búsqueda por nombre o código agiliza la atención; los formularios evitan datos incoherentes; las alertas señalan faltantes. Una venta debe registrar sus detalles y descontar existencias como una única operación.
+La aplicación organiza el trabajo en resumen general, inventario, alertas de reposición, nueva venta e historial. Los productos y ventas se almacenan en Turso a través de una API protegida por sesiones.
 
-**Alcance implementado:** fases 1 y 2, interfaz y simulación en memoria. **Alcance pendiente:** API, persistencia en Turso, autenticación, transacciones reales y despliegue. Los registros actuales son ficticios y no sirven para operar la botica en producción.
+Se implementaron la interfaz de las fases iniciales, el esquema relacional, las operaciones persistentes, las alertas sobre datos reales, la venta transaccional y un acceso con roles. El diseño existente se conserva. El despliegue real y la inspección visual completa siguen pendientes.
 
-## 4. Tecnologías y justificación
+## 4. Tecnologías elegidas
 
-| Tecnología                                     | Uso                                                                                   |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------- |
-| React, JavaScript y JSX                        | Componentes reutilizables y actualización de pantallas ante cambios.                  |
-| Vite                                           | Servidor de desarrollo y compilación del frontend.                                    |
-| Bootstrap 5 y CSS                              | Grilla adaptable, tarjetas, tablas, formularios, estilos de modales y notificaciones. |
-| Bootstrap Icons                                | Iconografía coherente, servida localmente sin depender de CDN.                        |
-| React Router                                   | Navegación entre módulos y enlaces a detalles de ventas.                              |
-| Node y su ejecutor de pruebas                  | Herramientas locales y pruebas de reglas de negocio.                                  |
-| jsdom                                          | Verificación automatizada del árbol DOM sin sustituir la revisión visual real.        |
-| Node + Vercel Functions (pendiente)            | API REST con credenciales privadas y validación del servidor.                         |
-| Turso + cliente oficial JavaScript (pendiente) | Almacenamiento SQL persistente y transacciones.                                       |
-| GitHub y Vercel (pendientes)                   | Repositorio y publicación.                                                            |
+| Tecnología                     | Justificación                                                                |
+| ------------------------------ | ---------------------------------------------------------------------------- |
+| React, JavaScript y JSX        | Componentes y actualizaciones de pantalla al cambiar datos.                  |
+| Vite                           | Desarrollo y compilación; middleware local para ejecutar la misma API.       |
+| Bootstrap 5 y CSS              | Grilla, formularios, tablas, tarjetas y componentes con el diseño existente. |
+| React Router y Bootstrap Icons | Navegación e iconografía coherentes.                                         |
+| Node y Vercel Functions        | API REST, autorización y validaciones del servidor.                          |
+| Turso y @libsql/client         | SQL persistente y transacciones de escritura; SDK solo del servidor.         |
+| GitHub                         | Repositorio y documentación del proyecto.                                    |
+| Vercel                         | Plataforma de despliegue preparada, todavía no publicada.                    |
+| node:test y jsdom              | Pruebas de reglas, SQL, HTTP e interacción con React.                        |
 
-No se contrataron servicios, ingresaron tarjetas ni crearon cuentas. El frontend no necesita servicios externos para funcionar en modo demostración. Las condiciones vigentes de los planes gratuitos deben comprobarse antes de publicar.
+No se contrataron servicios ni se ingresaron tarjetas. Las condiciones de los planes gratuitos se deben revisar antes de publicar.
 
-## 5. Arquitectura
-
-### Estado actual
+## 5. Arquitectura del sistema
 
 ```mermaid
 flowchart LR
-  U[Personal de la botica] --> R[React + React Router]
-  R --> P[Proveedor de estado de demostración]
-  P --> V[Validaciones y simulación de venta]
-  P --> D[Datos ficticios en memoria]
+  U[Personal de la botica] --> R[React + Bootstrap + Router]
+  R -->|Peticiones /api y cookie HttpOnly| A[Vercel Functions / API local]
+  A --> S[Sesiones, roles y validaciones]
+  S --> C[Cliente libSQL del servidor]
+  C --> T[(Turso Cloud SQL)]
 ```
 
-La navegación comparte inventario, carrito y ventas mediante un proveedor de React. Las operaciones se procesan sobre el último estado con un reducer. Una venta se prepara sin modificar los objetos originales; si falla, no se actualiza ninguna parte del estado. Esto mejora la coherencia de la demostración, pero **no ofrece garantías de una base de datos ni resuelve concurrencia entre usuarios**.
+Localmente, un plugin de Vite monta los manejadores Node bajo /api. En Vercel se utilizan los archivos de api/. Ambos reutilizan server/application.js, los servicios SQL y las validaciones.
 
-### Arquitectura prevista para las siguientes fases
+El navegador recibe productos, ventas y el estado público de conexión. Nunca recibe el token ni la URL privada de Turso. La información importante no se almacena en localStorage.
 
-```mermaid
-flowchart LR
-  U[Navegador React] -->|HTTPS y cookie de sesión| A[API REST / Vercel Functions]
-  A --> S[Autenticación, roles y validaciones]
-  S --> T[Cliente oficial de Turso]
-  T --> DB[(Turso SQL persistente)]
-```
-
-Las credenciales de Turso y la clave de sesión permanecerán en variables privadas del servidor. El navegador no recibirá tokens de base de datos. El precio, los subtotales, los permisos y el stock se validarán nuevamente en la API.
-
-## 6. Modelo relacional previsto (todavía no implementado)
+## 6. Base de datos implementada
 
 ```mermaid
 erDiagram
-  USUARIOS ||--o{ VENTAS : registra
-  USUARIOS ||--o{ SESIONES : inicia
-  VENTAS ||--|{ DETALLE_VENTAS : contiene
-  PRODUCTOS ||--o{ DETALLE_VENTAS : referencia
-  USUARIOS {
-    integer id PK
+  usuarios ||--o{ ventas : registra
+  usuarios ||--o{ sesiones : inicia
+  ventas ||--|{ detalle_ventas : contiene
+  productos ||--o{ detalle_ventas : referencia
+  usuarios {
+    text id PK
     text usuario UK
     text password_hash
     text rol
+    text creado_en
   }
-  SESIONES {
+  sesiones {
     text token_hash PK
-    integer usuario_id FK
-    text expira_en
+    text usuario_id FK
+    integer expira_en
   }
-  PRODUCTOS {
-    integer id PK
+  productos {
+    text id PK
     text codigo UK
     text nombre
     text categoria
@@ -87,18 +76,23 @@ erDiagram
     integer precio_centimos
     integer stock
     integer stock_minimo
+    integer version
+    text creado_en
+    text actualizado_en
   }
-  VENTAS {
-    integer id PK
-    integer usuario_id FK
-    text fecha_utc
+  ventas {
+    text id PK
+    text usuario_id FK
+    text fecha
     integer total_centimos
     text medio_pago
+    text clave_idempotencia UK
+    text solicitud_hash
   }
-  DETALLE_VENTAS {
-    integer id PK
-    integer venta_id FK
-    integer producto_id FK
+  detalle_ventas {
+    text id PK
+    text venta_id FK
+    text producto_id FK
     text codigo_historico
     text nombre_historico
     integer cantidad
@@ -107,49 +101,74 @@ erDiagram
   }
 ```
 
-Se requieren restricciones de unicidad para códigos y usuarios; claves foráneas; precios positivos; cantidades enteras positivas en detalles; stock y mínimos no negativos; unicidad del par venta/producto; y restricciones para roles. Los precios se almacenarán en céntimos enteros. Los detalles conservarán código, nombre y precio históricos aunque se edite el producto. No se deben borrar productos referenciados por ventas; una futura baja deberá ser lógica.
+También existen schema_migrations e intentos_login. El esquema está en server/schema.js y se aplica con npm run db:migrate. La migración es repetible y no inserta datos de demostración.
+
+Las restricciones incluyen claves foráneas, códigos únicos sin distinguir mayúsculas, roles válidos, precios positivos, stock no negativo, cantidades enteras positivas y unicidad de producto por venta. Los detalles preservan código, nombre y precio históricos. Las transacciones verifican que las claves foráneas estén activadas.
 
 ## 7. Proceso de venta
 
-### Interacción implementada
-
 ```mermaid
 flowchart TD
-  A[Buscar producto] --> B[Agregar presentación al carrito]
-  B --> C[Ajustar cantidades]
-  C --> D[Calcular subtotales y total]
-  D --> E[Elegir medio de pago informativo]
-  E --> F[Confirmar venta de demostración]
-  F --> G{Validar carrito y stock actual}
-  G -->|Error| H[Mostrar mensaje y conservar estado]
-  G -->|Correcto| I[Actualizar inventario y ventas en memoria]
-  I --> J[Vaciar carrito y actualizar alertas]
+  A[Buscar y seleccionar productos] --> B[Ajustar cantidades y revisar total]
+  B --> C[Confirmar y enviar clave idempotente]
+  C --> D[Servidor verifica sesión y entrada]
+  D --> E[Iniciar transacción de escritura]
+  E --> F{¿La solicitud ya fue guardada?}
+  F -->|Sí, mismo contenido| G[Devolver la misma venta]
+  F -->|No| H[Consultar productos y precios actuales]
+  H --> I{¿Stock y total confirmado válidos?}
+  I -->|No| J[Rollback y mensaje de conflicto]
+  I -->|Sí| K[Descontar con condición stock suficiente]
+  K --> L[Insertar cabecera y detalles]
+  L --> M{¿Todos los pasos correctos?}
+  M -->|No| J
+  M -->|Sí| N[Commit y devolver venta]
+  N --> O[Actualizar inventario, alertas e historial]
 ```
 
-### Garantía transaccional pendiente
+El backend no acepta precios ni subtotales como autoridad. Los calcula desde SQL y compara el total con el importe confirmado. Si los precios cambiaron, revierte la operación para que el usuario revise el importe.
 
-En el servidor deberá abrirse una transacción de escritura, cargar precios desde SQL y descontar cada producto con una consulta parametrizada condicionada a `stock >= cantidad`. Si cualquier descuento no afecta exactamente una fila, debe hacerse rollback de la operación completa. La cabecera y los detalles se insertarán en la misma transacción; solo después se hará commit. Se deben probar dos solicitudes simultáneas sobre las últimas unidades. Ninguna validación exclusivamente en React garantiza esta propiedad.
+El descuento utiliza UPDATE con condición stock >= cantidad, dentro de la misma transacción que las inserciones. Un fallo revierte cabecera, detalles, stock y versiones. La clave idempotente evita duplicados si se repite una solicitud después de un problema de red.
+
+Se comprobó en Turso que dos solicitudes simultáneas desde clientes independientes no pueden vender dos veces la última unidad.
 
 ## 8. Control de inventario
 
-El formulario registra código único, nombre, categoría, presentación, precio, stock y mínimo. Rechaza valores negativos, cantidades fraccionarias y códigos repetidos. La búsqueda ignora mayúsculas y tildes. Los filtros permiten consultar categoría y estado. El precio y la cantidad corresponden a la presentación indicada, no a tabletas individuales.
+El formulario registra código, nombre, categoría, presentación, precio, stock y mínimo. Cliente y servidor validan los campos, y SQL aplica las restricciones finales. Todas las entradas variables se transmiten mediante parámetros SQL.
 
-Actualmente los cambios duran mientras la aplicación siga abierta. La fase de Turso debe sustituir el almacenamiento en memoria por lecturas y escrituras persistentes autenticadas. Se debe comprobar la persistencia al recargar, cerrar sesión y volver a desplegar.
+La edición envía la versión que el usuario consultó. Si otra operación modificó el producto, el servidor responde con conflicto para impedir que una edición antigua restaure existencias ya vendidas. Es necesario cerrar y volver a abrir el formulario para trabajar sobre la versión reciente.
 
-## 9. Alertas de reposición
+La API confirma el guardado antes de cerrar el formulario. Los medicamentos se recuperan desde Turso después de recargar o reiniciar el servidor.
 
-| Regla                                          | Estado visual         |
-| ---------------------------------------------- | --------------------- |
-| Stock igual a cero                             | Agotado, rojo.        |
-| Stock mayor que cero y menor o igual al mínimo | Stock bajo, amarillo. |
-| Stock mayor que el mínimo                      | Disponible, verde.    |
+## 9. Alertas de reposición y seguridad
 
-La regla se deriva del inventario, por lo que editar existencias, registrar una venta o reponer un producto actualiza las alertas y el resumen. No existen alertas persistidas separadas que puedan quedar desactualizadas. La reposición en esta etapa usa el formulario de edición; los movimientos auditados se diseñarán en las fases del backend.
+| Regla                                  | Estado                |
+| -------------------------------------- | --------------------- |
+| Stock cero                             | Agotado, rojo.        |
+| Stock positivo menor o igual al mínimo | Stock bajo, amarillo. |
+| Stock mayor al mínimo                  | Disponible, verde.    |
 
-## 10. Instalación y funcionamiento
+Las alertas se calculan a partir del inventario real. Guardar productos, reponer o vender actualiza el estado. Las vistas se refrescan al recuperar el foco y periódicamente mientras existe una sesión.
 
-Consultar [README](../README.md) para comandos, estructura, ejecución y próximas fases. Consultar [PRUEBAS](PRUEBAS.md) para verificaciones y limitaciones.
+El primer administrador se crea una sola vez y únicamente desde el servidor local. El administrador registra y edita productos; los roles admin y vendedor pueden consultar y vender. Las contraseñas se guardan con scrypt, sal aleatoria y comparación segura.
+
+Las sesiones usan tokens aleatorios de 256 bits, guardan únicamente su hash y expiran en 8 horas. La cookie es HttpOnly y SameSite=Strict; en producción incorpora Secure. Hay validación de origen, cuerpo JSON y límite de tamaño, además de bloqueo temporal tras intentos de acceso fallidos.
+
+Las variables privadas se cargan desde .env.local localmente o desde Vercel en producción. El frontend solo utiliza el cliente HTTP público. La etiqueta Turso conectado depende de una consulta SELECT real completada correctamente.
+
+## 10. Instalación, uso y pruebas
+
+Consultar [README](../README.md) para los comandos exactos, primer acceso, prueba de persistencia y configuración de Vercel. Consultar [PRUEBAS](PRUEBAS.md) para las 28 pruebas locales y la verificación remota.
+
+La base remota no se sustituye por SQLite dentro de Vercel Functions. Se comprobó persistencia con un cliente independiente, rollback, rechazo por stock insuficiente, concurrencia e idempotencia. Los registros técnicos de la prueba se retiraron al terminar.
 
 ## Preguntas guía PIAD-527
 
-La solicitud no incluye el contenido literal de las cinco preguntas guía. Se requiere el PDF original o su transcripción para responderlas respetando su contenido. No se han inventado ni sustituido por preguntas genéricas. Se conservará NOVA SALUD como nombre del proyecto aunque las preguntas mencionen FarmaPlus.
+La solicitud no contiene la redacción literal de las cinco preguntas. Se requiere el PDF o su transcripción para responderlas fielmente. Se mantiene NOVA SALUD como nombre del proyecto aunque las preguntas originales mencionen FarmaPlus.
+
+## Referencias técnicas
+
+- [Cliente oficial libSQL JavaScript](https://github.com/tursodatabase/libsql-client-ts).
+- [Referencia oficial de Turso](https://docs.turso.tech/sdk/ts/reference).
+- [Runtime Node de Vercel Functions](https://vercel.com/docs/functions/runtimes/node-js).
+- [Middleware configureServer de Vite](https://vite.dev/guide/api-plugin#configureserver).

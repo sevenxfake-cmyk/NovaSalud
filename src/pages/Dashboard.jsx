@@ -135,7 +135,7 @@ export default function Dashboard() {
           <div className="chart-total">
             {money(totalPeriod)}
             <span>
-              <span className="legend-dot" /> Ventas de demostración
+              <span className="legend-dot" /> Ventas registradas
             </span>
           </div>
           <div

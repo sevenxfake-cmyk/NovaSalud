@@ -4,7 +4,7 @@ import { categories } from "../lib/format";
 import { Icon, Modal } from "./UI";
 
 export default function ProductForm({ product, onClose }) {
-  const { saveProduct } = usePharmacy();
+  const { saveProduct, saving } = usePharmacy();
   const [error, setError] = useState("");
   const [form, setForm] = useState({
     code: product?.code ?? "",
@@ -17,12 +17,13 @@ export default function ProductForm({ product, onClose }) {
   });
   const change = (event) =>
     setForm({ ...form, [event.target.name]: event.target.value });
-  function submit(event) {
+  async function submit(event) {
     event.preventDefault();
     try {
-      saveProduct({
+      await saveProduct({
         ...form,
         id: product?.id,
+        version: product?.version,
         price: Math.round(Number(form.price) * 100),
         stock: Number(form.stock),
         minStock: Number(form.minStock),
@@ -164,15 +165,16 @@ export default function ProductForm({ product, onClose }) {
           </div>
         </div>
         <div className="form-info">
-          <Icon name="info-circle" /> Registro de demostración. Se reinicia al
-          recargar la página.
+          <Icon name="info-circle" /> El medicamento se guardará permanentemente
+          en Turso.
         </div>
         <div className="modal-actions">
           <button type="button" className="btn btn-light" onClick={onClose}>
             Cancelar
           </button>
-          <button className="btn btn-primary" type="submit">
-            <Icon name="check2" /> Guardar producto
+          <button className="btn btn-primary" type="submit" disabled={saving}>
+            <Icon name="check2" />{" "}
+            {saving ? "Guardando..." : "Guardar producto"}
           </button>
         </div>
       </form>

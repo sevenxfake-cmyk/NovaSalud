@@ -4,13 +4,19 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "vercel": "node --use-system-ca scripts/vercel.js",
+    "dev": "node --use-system-ca node_modules/vite/bin/vite.js",
+    "db:migrate": "node --use-system-ca scripts/database.js migrate",
+    "db:check": "node --use-system-ca scripts/database.js check",
+    "test:remote": "node --use-system-ca scripts/verify-turso.js",
+    "check:private": "node --use-system-ca scripts/check-private.js",
     "build": "vite build",
     "lint": "eslint .",
     "test": "node --max-old-space-size=256 --test --test-concurrency=1 --test-timeout=20000 tests/*.test.js",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@libsql/client": "^0.18.0",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.2",
     "react": "^19.3.1",

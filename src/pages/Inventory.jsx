@@ -185,7 +185,7 @@ export default function Inventory() {
             Mostrando {filtered.length} de {products.length} productos
           </span>
           <span>
-            <Icon name="info-circle" /> Inventario de demostración
+            <Icon name="database-check" /> Inventario guardado en Turso
           </span>
         </div>
       </section>

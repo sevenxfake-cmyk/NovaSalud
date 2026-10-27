@@ -1,5 +1,18 @@
 # Historial de cambios · NOVA SALUD
 
+## Conexión real con Turso · 27 de octubre de 2026
+
+- API Node compatible con Vercel Functions y ejecución local integrada en Vite.
+- Cliente privado @libsql/client, migración repetible y relaciones SQL de productos, ventas, detalles, usuarios y sesiones.
+- Inventario persistente con alta, edición y consultas; conflictos de edición protegidos mediante versiones.
+- Ventas transaccionales con validación de stock/precios, rollback e idempotencia.
+- Sesiones HttpOnly, hashes scrypt, roles y creación inicial del administrador solo localmente.
+- Indicador Turso conectado basado en una consulta real, sin recurrir a datos ficticios.
+- Diseño existente conservado; formularios preparados para esperar la respuesta del servidor.
+- 28 pruebas locales aprobadas y prueba real de persistencia, rollback, stock insuficiente, concurrencia e idempotencia en Turso.
+- Variables privadas excluidas de Git y comprobación del frontend compilado sin credenciales ni SDK.
+- Configuración y documentación de Vercel preparadas; despliegue real pendiente.
+
 ## Entrega inicial · Fases 1 y 2 · 27 de octubre de 2026
 
 ### Funciones incorporadas

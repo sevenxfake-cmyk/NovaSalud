@@ -3,6 +3,11 @@ import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
 import { createServer } from "vite";
 import { act, createElement } from "react";
+import { createClient } from "@libsql/client";
+import { migrate, health } from "../server/schema.js";
+import { getSnapshot, saveProduct, registerSale } from "../server/store.js";
+import { publicError } from "../server/errors.js";
+import { demoProducts } from "../src/data/demo.js";
 
 let dom;
 let server;
@@ -10,6 +15,8 @@ let App;
 let root;
 let container;
 let createRoot;
+let database;
+const originalFetch = globalThis.fetch;
 const savedGlobals = new Map();
 
 before(async () => {
@@ -33,6 +40,7 @@ before(async () => {
     });
   }
   server = await createServer({
+    mode: "test",
     cacheDir: "node_modules/.vite-tests",
     server: { middlewareMode: true },
     appType: "custom",
@@ -42,12 +50,84 @@ before(async () => {
 });
 
 beforeEach(async () => {
+  database = createClient({ url: "file::memory:" });
+  await migrate(database);
+  await database.execute({
+    sql: "INSERT INTO usuarios(id,usuario,password_hash,rol,creado_en) VALUES (?,?,?,?,?)",
+    args: [
+      "ui-user",
+      "equipo-test",
+      "hash-no-utilizado-en-esta-prueba",
+      "admin",
+      new Date().toISOString(),
+    ],
+  });
+  await database.batch(
+    demoProducts.map((product) => ({
+      sql: "INSERT INTO productos(id,codigo,nombre,categoria,presentacion,precio_centimos,stock,stock_minimo,creado_en,actualizado_en) VALUES (?,?,?,?,?,?,?,?,?,?)",
+      args: [
+        product.id,
+        product.code,
+        product.name,
+        product.category,
+        product.presentation,
+        product.price,
+        product.stock,
+        product.minStock,
+        new Date().toISOString(),
+        new Date().toISOString(),
+      ],
+    })),
+    "write",
+  );
+  // Solo este entorno de pruebas usa medicamentos ficticios y una sesión simulada.
+  globalThis.fetch = async (path, options = {}) => {
+    if (options.signal?.aborted)
+      throw new DOMException("Aborted", "AbortError");
+    const url = new URL(path, "http://localhost");
+    try {
+      let result;
+      const body = options.body ? JSON.parse(options.body) : null;
+      if (url.pathname === "/api/health") result = await health(database);
+      else if (url.pathname === "/api/auth")
+        result = {
+          user: { id: "ui-user", username: "equipo-test", role: "admin" },
+          needsSetup: false,
+          canSetup: false,
+        };
+      else if (url.pathname === "/api/state")
+        result = await getSnapshot(database);
+      else if (url.pathname === "/api/products")
+        result = {
+          product: await saveProduct(
+            database,
+            body,
+            url.searchParams.get("id"),
+          ),
+        };
+      else if (url.pathname === "/api/sales")
+        result = { sale: await registerSale(database, body, "ui-user") };
+      else throw new Error("Ruta no simulada");
+      return new Response(JSON.stringify(result), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    } catch (error) {
+      const safe = publicError(error);
+      return new Response(JSON.stringify({ error: safe.message }), {
+        status: safe.status,
+      });
+    }
+  };
   dom.window.history.replaceState({}, "", "/");
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
   await act(async () => {
     root.render(createElement(App));
+  });
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 30));
   });
 });
 
@@ -56,6 +136,8 @@ afterEach(async () => {
     root?.unmount();
   });
   container?.remove();
+  database?.close();
+  globalThis.fetch = originalFetch;
 });
 
 after(async () => {
@@ -108,7 +190,7 @@ async function submit(selector) {
 
 test("interfaz: navega por las cinco pantallas y encuentra categorías sin tildes", async () => {
   assert.match(get("h1").textContent, /Todo listo/);
-  assert.match(get(".demo-banner").textContent, /demostración/);
+  assert.match(get(".connection-label").textContent, /Turso conectado/);
   for (const path of [
     "/inventario",
     "/alertas",
@@ -200,4 +282,54 @@ test("interfaz: reponer un agotado actualiza inventario, alertas y resumen", asy
   await click('.sidebar nav a[href="/"]');
   const metrics = document.querySelectorAll(".metric-value");
   assert.equal(metrics[3].textContent, "0");
+});
+
+test("interfaz: un error del servidor mantiene abierto el formulario y no simula el guardado", async () => {
+  await click('.sidebar nav a[href="/inventario"]');
+  await click(".page-actions button");
+  await fill("#product-code", "TEST-ERROR");
+  await fill("#product-name", "Producto no guardado");
+  await fill("#product-presentation", "Caja de prueba");
+  await fill("#product-price", "5");
+  const routeFetch = globalThis.fetch;
+  globalThis.fetch = (path, options) =>
+    path.startsWith("/api/products")
+      ? Promise.resolve(
+          new Response(JSON.stringify({ error: "Conexión no disponible" }), {
+            status: 503,
+          }),
+        )
+      : routeFetch(path, options);
+  await submit('[role="dialog"] form');
+  assert.match(
+    get('[role="dialog"] [role="alert"]').textContent,
+    /Conexión no disponible/,
+  );
+  assert.equal(
+    (await getSnapshot(database)).products.length,
+    demoProducts.length,
+  );
+});
+
+test("interfaz: no anuncia Turso conectado si la consulta real falla", async () => {
+  await act(async () => {
+    root.unmount();
+  });
+  globalThis.fetch = async () =>
+    new Response(JSON.stringify({ error: "Conexión no disponible" }), {
+      status: 503,
+    });
+  root = createRoot(container);
+  await act(async () => {
+    root.render(createElement(App));
+  });
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  });
+  assert.equal(
+    get(".connection-label").textContent.includes("Turso conectado"),
+    false,
+  );
+  assert.match(get(".connection-label").textContent, /Sin conexión verificada/);
+  assert.equal(document.querySelector(".metric-grid") === null, true);
 });

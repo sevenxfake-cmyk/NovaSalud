@@ -58,7 +58,7 @@ export default function History() {
           </strong>
         </div>
         <span className="demo-tag">
-          <Icon name="flask" /> Datos de demostración
+          <Icon name="database-check" /> Registros persistentes
         </span>
       </div>
       <section className="card panel">
@@ -287,7 +287,7 @@ export default function History() {
             <strong>{money(selected.total)}</strong>
           </div>
           <div className="form-info">
-            <Icon name="info-circle" /> Registro de demostración. No es un
+            <Icon name="info-circle" /> Registro interno de la botica. No es un
             comprobante fiscal.
           </div>
           <div className="modal-actions">

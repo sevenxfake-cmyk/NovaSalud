@@ -195,7 +195,7 @@ export default function Alerts() {
         <p>
           <strong>Un inventario saludable comienza con la prevención.</strong>{" "}
           Ajusta el stock mínimo de cada producto según la demanda de tu botica.
-          Las reposiciones de esta etapa son de demostración.
+          Las reposiciones se guardan en la base de datos de la botica.
         </p>
       </div>
       {editing && <ProductForm product={editing} onClose={close} />}

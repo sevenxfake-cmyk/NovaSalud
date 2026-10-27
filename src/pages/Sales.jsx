@@ -12,27 +12,32 @@ import {
 } from "../components/UI";
 
 export default function Sales() {
-  const { products, cart, setQuantity, clearCart, registerSale } =
+  const { products, cart, setQuantity, clearCart, registerSale, saving } =
     usePharmacy();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
   const [payment, setPayment] = useState("Efectivo");
   const [confirming, setConfirming] = useState(false);
+  const [error, setError] = useState("");
   const close = useCallback(() => setConfirming(false), []);
   const filtered = products.filter(
     (product) =>
       matchesProduct(product, query) &&
       (!category || product.category === category),
   );
-  const items = cart.map((item) => ({
-    ...item,
-    product: products.find((product) => product.id === item.productId),
-  }));
+  const items = cart
+    .map((item) => ({
+      ...item,
+      product: products.find((product) => product.id === item.productId),
+    }))
+    .filter((item) => item.product);
   const total = items.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
     0,
   );
-  const invalid = items.some((item) => item.quantity > item.product.stock);
+  const invalid =
+    cart.length !== items.length ||
+    items.some((item) => item.quantity > item.product.stock);
   return (
     <>
       <PageHeading
@@ -223,21 +228,24 @@ export default function Sales() {
             </p>
             <button
               className="btn btn-primary w-100"
-              disabled={!cart.length || invalid}
-              onClick={() => setConfirming(true)}
+              disabled={!cart.length || invalid || saving}
+              onClick={() => {
+                setError("");
+                setConfirming(true);
+              }}
             >
               <Icon name="check2-circle" /> Registrar venta
             </button>
             <p className="cart-demo-note">
-              <Icon name="info-circle" /> Venta de demostración. No emite
-              comprobante fiscal ni procesa pagos.
+              <Icon name="info-circle" /> La venta y el stock se guardan en
+              Turso. Este registro no emite comprobante fiscal ni procesa pagos.
             </p>
           </div>
         </aside>
       </div>
       {confirming && (
         <Modal
-          title="Confirmar venta de demostración"
+          title="Confirmar venta"
           subtitle="Revisa el importe antes de continuar."
           onClose={close}
         >
@@ -248,26 +256,37 @@ export default function Sales() {
           </div>
           <p className="text-secondary">
             Se registrarán {items.length} productos y se descontarán sus
-            cantidades del inventario de demostración. Medio de pago:{" "}
-            <strong>{payment}</strong>.
+            cantidades del inventario. Medio de pago: <strong>{payment}</strong>
+            .
           </p>
           <div className="alert alert-primary small">
-            Los cambios se conservarán durante esta sesión y se reiniciarán al
-            recargar.
+            El servidor validará las existencias y guardará la venta completa en
+            una transacción.
           </div>
+          {error && (
+            <div className="alert alert-danger" role="alert">
+              {error}
+            </div>
+          )}
           <div className="modal-actions">
             <button className="btn btn-light" onClick={close}>
               Seguir editando
             </button>
             <button
               className="btn btn-primary"
-              disabled={invalid || !cart.length}
-              onClick={() => {
-                registerSale(payment);
-                close();
+              disabled={invalid || !cart.length || saving}
+              onClick={async () => {
+                setError("");
+                try {
+                  await registerSale(payment);
+                  close();
+                } catch (err) {
+                  setError(err.message);
+                }
               }}
             >
-              <Icon name="check2" /> Confirmar venta
+              <Icon name="check2" />{" "}
+              {saving ? "Registrando..." : "Confirmar venta"}
             </button>
           </div>
         </Modal>

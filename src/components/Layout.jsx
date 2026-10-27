@@ -9,6 +9,7 @@ import {
 import { usePharmacy } from "../context/pharmacy";
 import { stockStatus, dateLabel } from "../lib/format";
 import { Icon } from "./UI";
+import AuthPanel from "./AuthPanel";
 
 const links = [
   { to: "/", label: "Resumen general", icon: "grid-1x2" },
@@ -19,8 +20,20 @@ const links = [
 ];
 
 export default function Layout() {
-  const { products, globalSearch, setGlobalSearch, notice, dismissNotice } =
-    usePharmacy();
+  const {
+    products,
+    globalSearch,
+    setGlobalSearch,
+    notice,
+    dismissNotice,
+    user,
+    logout,
+    connection,
+    schemaReady,
+    loading,
+    loadError,
+    retry,
+  } = usePharmacy();
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -157,27 +170,85 @@ export default function Layout() {
             <div className="profile">
               <span className="profile-avatar">NS</span>
               <div>
-                <strong>Equipo Nova Salud</strong>
-                <small>Perfil de demostración</small>
+                <strong>{user?.username ?? "Equipo Nova Salud"}</strong>
+                <small>
+                  {user
+                    ? user.role === "admin"
+                      ? "Administrador"
+                      : "Vendedor"
+                    : "Acceso protegido"}
+                </small>
               </div>
             </div>
+            {user && (
+              <button
+                className="icon-button"
+                aria-label="Cerrar sesión"
+                onClick={logout}
+              >
+                <Icon name="box-arrow-right" />
+              </button>
+            )}
           </div>
         </header>
         <main id="main-content" tabIndex="-1">
           <div className="demo-banner">
             <span>
-              <Icon name="info-circle" /> <strong>Modo demostración</strong>
+              <Icon name="database-check" />{" "}
+              <strong>Inventario persistente</strong>
               <span className="demo-explanation">
                 {" "}
-                · Datos ficticios. Los cambios se reinician al recargar.
+                · Los registros se almacenan en la base de datos de la botica.
               </span>
             </span>
-            <span className="connection-label">
-              <span className="status-dot" />
-              Turso pendiente
+            <span
+              className="connection-label"
+              role="status"
+              style={
+                connection === "connected" ? { color: "#278563" } : undefined
+              }
+            >
+              <span
+                className="status-dot"
+                style={
+                  connection === "connected"
+                    ? { background: "#278563" }
+                    : undefined
+                }
+              />
+              {connection === "connected"
+                ? "Turso conectado"
+                : connection === "checking"
+                  ? "Verificando conexión..."
+                  : "Sin conexión verificada"}
             </span>
           </div>
-          <Outlet />
+          {loading ? (
+            <div className="py-5 text-center text-secondary" role="status">
+              <span className="spinner-border spinner-border-sm me-2" />
+              Cargando datos de la botica...
+            </div>
+          ) : (
+            <>
+              {loadError && (
+                <div
+                  className="alert alert-warning d-flex flex-wrap align-items-center gap-2"
+                  role="alert"
+                >
+                  <span>{loadError}</span>
+                  <button
+                    className="btn btn-sm btn-outline-secondary ms-auto"
+                    onClick={retry}
+                  >
+                    Reintentar / actualizar
+                  </button>
+                </div>
+              )}
+              {connection === "connected" &&
+                schemaReady &&
+                (user ? <Outlet /> : <AuthPanel />)}
+            </>
+          )}
         </main>
         <footer className="app-footer">
           <span>

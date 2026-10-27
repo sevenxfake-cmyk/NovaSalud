@@ -1,69 +1,64 @@
-# Verificación · Fases 1 y 2
+# Verificación · Backend y Turso
 
 ## Comandos
 
 ```powershell
+npm.cmd run db:migrate
+npm.cmd run db:check
 npm.cmd test
 npm.cmd run lint
 npm.cmd run build
-npm.cmd run dev -- --host 127.0.0.1
+npm.cmd run check:private
+npm.cmd run test:remote
+npm.cmd run dev
 ```
 
-## Reglas verificadas automáticamente
+## Pruebas automáticas locales: 28 aprobadas
 
-- Cálculo de subtotales y total a partir del catálogo, usando céntimos enteros.
-- Descuento de stock y conservación del nombre/precio histórico.
-- Rechazo de stock insuficiente sin modificación parcial de productos.
-- Venta de las últimas unidades y rechazo de otra venta sobre el resultado actualizado.
-- Rechazo de carrito vacío, productos inexistentes, agotados y duplicados.
-- Rechazo de cantidades negativas, cero, fracciones, valores no finitos y medios de pago inválidos.
-- Normalización y unicidad del código de producto.
-- Límites y validación de precio, stock, categoría y presentación.
-- Alertas cuando el stock es cero o igual al mínimo.
-- Búsqueda por categoría, código y nombre sin distinguir tildes o mayúsculas.
-- Fechas agrupadas por el día de Lima en el cambio de día UTC.
+Los archivos se ejecutan uno por uno, con 256 MB de heap y 20 segundos por prueba. Estas pruebas no conectan con la base remota.
 
-Estas pruebas usan objetos en memoria: **no prueban transacciones ni concurrencia de Turso**.
+- 12 pruebas de SQL/HTTP y seguridad: migraciones repetibles, restricciones y relaciones, edición por versión, transacciones, rollback después de descontar stock, idempotencia, concurrencia, sesiones, roles, alta inicial solo local, bloqueo temporal y mensajes sin datos privados.
+- 6 pruebas de interfaz: navegación y búsqueda, registro/duplicados y foco, venta e historial, reposición, formulario conservado ante error del servidor y ausencia de Turso conectado si falla la consulta.
+- 10 pruebas de reglas y formatos: validación de precios/cantidades/códigos, importes, alertas y fechas de Lima.
 
-## Recorridos de interfaz verificados automáticamente
+Las pruebas de interfaz utilizan medicamentos ficticios en SQL en memoria y una sesión simulada. La aplicación real no carga esos datos.
 
-Cuatro pruebas adicionales montan la aplicación React con jsdom y la transformación JSX de Vite:
+## Comprobación real en Turso
 
-- Navegación por las cinco pantallas y búsqueda por categoría sin tildes.
-- Alta de un producto, rechazo de código duplicado, cierre con Escape y retorno del foco.
-- Producto agotado deshabilitado, rechazo de cantidad superior al stock, confirmación de venta, descuento de inventario y consulta del detalle.
-- Reposición de un producto agotado y actualización de alertas e indicadores del resumen.
+`npm run db:check` completó una consulta SELECT real y verificó el esquema.
 
-**Resultado: 14 pruebas aprobadas (10 de reglas y 4 de interfaz).** Las pruebas se ejecutan de forma secuencial, con límite de 256 MB de heap por proceso y tiempo máximo de 20 segundos por prueba. El entorno DOM usa `FormData` de jsdom para representar formularios del navegador. No se inspeccionan objetos DOM completos en las aserciones, ya que sus referencias circulares pueden consumir mucha memoria al informar un fallo.
+`npm run test:remote` completó:
 
-Estas pruebas no miden el aspecto visual, el tamaño real de los controles ni la adaptación gráfica en un navegador.
+1. Alta de un producto temporal identificado como PRUEBA AUTOMATIZADA.
+2. Fallo intencional de una venta después de descontar stock, al referenciar un usuario inexistente; rollback comprobado.
+3. Edición del medicamento y lectura persistente desde otro cliente.
+4. Rechazo de una venta superior al stock.
+5. Dos ventas simultáneas desde clientes independientes sobre la última unidad: solo una se guardó.
+6. Reintento de la solicitud ganadora: mismo ID de venta y un solo descuento.
+7. Retirada de los registros técnicos de esa ejecución mediante claves exactas.
 
-## Comprobaciones de ejecución
+El script no imprime URL, tokens, hashes de sesión ni contraseñas. La limpieza está limitada al usuario UUID y al producto/código de la ejecución. Si falla, informa que se revisen los registros temporales antes de repetir la prueba.
 
-La compilación de producción y ESLint deben terminar sin errores. Vite debe iniciar y servir el punto de entrada de React con HTTP 200 en `/`, `/inventario`, `/alertas`, `/ventas` y `/historial`. Una respuesta HTTP 200 no demuestra por sí sola que una pantalla se renderice correctamente.
+La ejecución final pasó íntegramente. Esto no implica que la red nunca pueda fallar: los reintentos usan una clave idempotente y los errores se muestran sin simular un guardado.
 
-## Revisión visual pendiente
+## Prueba manual de persistencia
 
-Se intentó abrir la aplicación en Chrome mediante control del equipo. La herramienta detuvo la operación porque no pudo determinar con suficiente confianza la URL del navegador para aplicar sus reglas. No se completó una inspección visual ni se capturaron pantallas. La revisión visual de escritorio y móvil sigue pendiente.
+Crear un medicamento en Inventario, esperar la confirmación, recargar y comprobar que sigue presente. Editarlo, guardar, reiniciar Vite e iniciar sesión: la edición debe conservarse.
 
-## Recorrido manual de aceptación
+La primera vez se crea el administrador desde el acceso local. El usuario queda en Turso; no se generan credenciales predeterminadas.
 
-1. Abrir el resumen y comprobar que la franja identifica los datos como demostración.
-2. Ir al inventario, buscar `analgesicos` y comprobar la coincidencia con la categoría acentuada.
-3. Crear un producto con código nuevo y verificar que aparece en la tabla.
-4. Intentar reutilizar ese código y comprobar el mensaje de error.
-5. Cambiar el stock a cero y verificar que el producto aparece como agotado en alertas.
-6. Reponerlo por encima del mínimo y verificar que desaparece de alertas.
-7. Preparar una venta con dos productos, modificar cantidades y comprobar el total.
-8. Intentar superar el stock disponible y comprobar que no se acepta la cantidad.
-9. Confirmar la venta; comprobar que se vacía el carrito, baja el stock y aparece en el historial.
-10. Abrir el detalle y verificar nombres, cantidades, precios, subtotales y total.
-11. Cambiar el precio del producto y verificar que el detalle de la venta anterior conserva su precio.
-12. Probar búsqueda, fechas y paginación en historial, incluido un rango de fechas invertido.
-13. Recargar una ruta y comprobar que carga React. Los datos volverán al ejemplo inicial en esta etapa.
-14. Revisar a 390 px y 1440 px, abrir/cerrar el menú móvil y comprobar tablas desplazables horizontalmente.
-15. Recorrer formularios con teclado; cerrar modales con Escape y verificar el retorno del foco.
+## Credenciales
 
-## Pendiente con el backend
+- `git check-ignore .env.local` devuelve la ruta ignorada.
+- `git ls-files -- .env.local` no devuelve archivos.
+- `npm run check:private` analiza el build para confirmar que el token, la URL privada y el SDK no están en el frontend.
+- Los errores internos del SDK se traducen a mensajes públicos sin imprimir el error original.
+- La migración no inserta medicamentos, ventas ni administradores ficticios.
 
-Persistencia tras recarga/cierre/despliegue, autenticación y roles, sesiones seguras, validaciones del servidor, consultas parametrizadas, rollback de ventas fallidas, venta concurrente de las últimas unidades, idempotencia ante reintentos, errores de red y configuración de Vercel. No se conectó una base de datos real en esta entrega.
+## Limitaciones
+
+La inspección visual completa de Chrome y móvil sigue pendiente: la herramienta de control del navegador bloqueó la revisión anterior al no poder verificar la URL. Los recorridos DOM no sustituyen esa comprobación.
+
+La ejecución local y los manejadores están verificados; la configuración de Vercel está preparada, pero no se ha publicado ni comprobado un despliegue real. No se procesan pagos ni se emiten comprobantes fiscales.
+
+Quedan como ampliaciones la administración visual de cuentas adicionales, recuperación de acceso, auditoría detallada de reposiciones y copias de seguridad operativas.
