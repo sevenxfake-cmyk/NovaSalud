@@ -2,6 +2,8 @@
 
 El profesor podrá abrir la URL pública del proyecto publicado en Vercel e iniciar sesión en NOVA SALUD. Su computadora solo necesita navegador e internet. El inventario y las ventas se guardan en Turso Cloud, independientemente del equipo desde el que se acceda.
 
+**Enlace publicado y verificado: [https://novasalud.vercel.app](https://novasalud.vercel.app).**
+
 ## Preparación antes de la presentación
 
 1. Crear el primer administrador desde la ejecución local de NOVA SALUD. Usar credenciales elegidas por el propietario; no existen claves predeterminadas.
@@ -41,4 +43,4 @@ El panel de Vercel se utiliza para administrar el despliegue; la demostración a
 
 ## Estado
 
-La persistencia, las ventas y la concurrencia ya se verificaron contra Turso. El despliegue público solo debe darse por terminado después de comprobar esos flujos en la URL de Vercel. El inicio de sesión de Vercel y el alta del primer administrador requieren intervención del propietario.
+El despliegue está publicado y se verificaron sus flujos reales de API: acceso con cookie segura, alta/edición y lectura persistente, ventas, historial, idempotencia, concurrencia y recarga de rutas. La cuenta y los medicamentos técnicos utilizados se retiraron al terminar. El propietario debe crear su administrador definitivo desde la aplicación local; esa cuenta se guarda en la misma base y permite entrar al enlace público sin volver a desplegar.

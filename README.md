@@ -6,6 +6,8 @@ Inventario, alertas y ventas conectados a **Turso Cloud** mediante una API Node 
 
 Repositorio: [sevenxfake-cmyk/NovaSalud](https://github.com/sevenxfake-cmyk/NovaSalud).
 
+Aplicación publicada: **[https://novasalud.vercel.app](https://novasalud.vercel.app)**. Se verificaron en Production la conexión, el acceso, el inventario persistente, las ventas y la concurrencia. El primer administrador debe crearse una sola vez desde la ejecución local; después se utiliza ese mismo usuario en el enlace público.
+
 ## Ejecutar localmente
 
 Usar Node 22.19 o posterior compatible con Vite; se verificó con Node 26.12.1. Desde la carpeta NOVA_SALUD:
@@ -129,6 +131,7 @@ npm.cmd run lint
 npm.cmd run build
 npm.cmd run check:private
 npm.cmd run test:remote
+npm.cmd run test:public -- https://novasalud.vercel.app
 ```
 
 `npm test` ejecuta **28 pruebas** secuenciales con límite de memoria: SQL en memoria, HTTP, formularios y reglas. No utiliza la base remota ni sus credenciales.
@@ -149,7 +152,9 @@ Para usar la CLI sin instalarla globalmente: `npm.cmd run vercel -- login`. Comp
 4. Build: `npm run build`; salida: `dist`. Las funciones están en `api/`.
 5. Confirmar la conexión en `/api/health`, la recarga de rutas y los flujos de acceso, inventario y ventas.
 
-No se almacena SQLite modificable en Vercel. Esta entrega prepara el despliegue, pero no publica ni verifica una instancia real.
+No se almacena SQLite modificable en Vercel. El proyecto `sevenxfake/novasalud` está publicado y conectado al repositorio de GitHub, rama `main`. Las variables de Turso están configuradas como secretos de Production. Se verificaron los flujos de la API y las rutas directas en el dominio público, sin depender de un servidor local.
+
+`test:public` verifica el despliegue mediante peticiones HTTPS reales. Crea una cuenta y un medicamento técnicos temporales, prueba sesión segura, alta/edición, nuevas lecturas, venta, historial, idempotencia, concurrencia, rutas y salida. Al finalizar retira exclusivamente los registros de esa ejecución y no conserva una cuenta de prueba.
 
 Consultar [la guía de presentación desde otra PC](docs/PRESENTACION.md) para preparar el enlace y demostrar la persistencia.
 

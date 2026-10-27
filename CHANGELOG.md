@@ -1,5 +1,13 @@
 # Historial de cambios · NOVA SALUD
 
+## Publicación en Vercel · 27 de octubre de 2026
+
+- Aplicación publicada en https://novasalud.vercel.app con Vite y Node 24.
+- Variables de Turso configuradas como secretos de Production y repositorio GitHub vinculado a `main`.
+- Verificación HTTPS real de acceso, cookie segura, inventario persistente, ventas, historial, idempotencia, concurrencia y rutas.
+- Comando `test:public` con registros temporales y limpieza limitada a esa ejecución.
+- Documentación de la presentación desde otra PC, con enlace público y alta inicial del administrador desde el equipo local.
+
 ## Conexión real con Turso · 27 de octubre de 2026
 
 - API Node compatible con Vercel Functions y ejecución local integrada en Vite.

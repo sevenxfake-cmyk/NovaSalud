@@ -14,7 +14,7 @@ Implementar un software web que permita gestionar de forma centralizada y automa
 
 La aplicación organiza el trabajo en resumen general, inventario, alertas de reposición, nueva venta e historial. Los productos y ventas se almacenan en Turso a través de una API protegida por sesiones.
 
-Se implementaron la interfaz de las fases iniciales, el esquema relacional, las operaciones persistentes, las alertas sobre datos reales, la venta transaccional y un acceso con roles. El diseño existente se conserva. El despliegue real y la inspección visual completa siguen pendientes.
+Se implementaron la interfaz, el esquema relacional, las operaciones persistentes, las alertas sobre datos reales, la venta transaccional y un acceso con roles. El diseño existente se conserva. La aplicación está publicada en https://novasalud.vercel.app y se verificó su API real; la inspección visual completa sigue pendiente.
 
 ## 4. Tecnologías elegidas
 
@@ -27,7 +27,7 @@ Se implementaron la interfaz de las fases iniciales, el esquema relacional, las 
 | Node y Vercel Functions        | API REST, autorización y validaciones del servidor.                          |
 | Turso y @libsql/client         | SQL persistente y transacciones de escritura; SDK solo del servidor.         |
 | GitHub                         | Repositorio y documentación del proyecto.                                    |
-| Vercel                         | Plataforma de despliegue preparada, todavía no publicada.                    |
+| Vercel                         | Publicación del frontend y la API en https://novasalud.vercel.app.           |
 | node:test y jsdom              | Pruebas de reglas, SQL, HTTP e interacción con React.                        |
 
 No se contrataron servicios ni se ingresaron tarjetas. Las condiciones de los planes gratuitos se deben revisar antes de publicar.

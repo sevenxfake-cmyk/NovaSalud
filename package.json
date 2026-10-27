@@ -9,6 +9,7 @@
     "db:migrate": "node --use-system-ca scripts/database.js migrate",
     "db:check": "node --use-system-ca scripts/database.js check",
     "test:remote": "node --use-system-ca scripts/verify-turso.js",
+    "test:public": "node --use-system-ca scripts/verify-public.js",
     "check:private": "node --use-system-ca scripts/check-private.js",
     "build": "vite build",
     "lint": "eslint .",

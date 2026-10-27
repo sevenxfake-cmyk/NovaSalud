@@ -10,6 +10,7 @@ npm.cmd run lint
 npm.cmd run build
 npm.cmd run check:private
 npm.cmd run test:remote
+npm.cmd run test:public -- https://novasalud.vercel.app
 npm.cmd run dev
 ```
 
@@ -55,10 +56,25 @@ La primera vez se crea el administrador desde el acceso local. El usuario queda 
 - Los errores internos del SDK se traducen a mensajes públicos sin imprimir el error original.
 - La migración no inserta medicamentos, ventas ni administradores ficticios.
 
+## Verificación del despliegue público
+
+La aplicación está publicada en [https://novasalud.vercel.app](https://novasalud.vercel.app). El comando `test:public` completó peticiones HTTPS reales contra Production:
+
+- Conexión y esquema de Turso verificados desde la API pública.
+- Inventario inaccesible sin sesión y acceso con cookie HttpOnly y Secure.
+- Alta, edición y recuperación del medicamento con una nueva petición.
+- Venta persistente, historial y descuento de stock.
+- Reintento idempotente sin duplicar la venta.
+- Dos solicitudes simultáneas sobre la última unidad: solo una venta aceptada.
+- Rutas `/`, `/inventario`, `/alertas`, `/ventas` y `/historial` accesibles directamente con HTTP 200.
+- Cierre de sesión efectivo.
+
+La cuenta y todos los registros técnicos de esa ejecución fueron retirados mediante sus claves exactas. La comprobación no conserva credenciales ni crea un administrador definitivo para el propietario.
+
 ## Limitaciones
 
 La inspección visual completa de Chrome y móvil sigue pendiente: la herramienta de control del navegador bloqueó la revisión anterior al no poder verificar la URL. Los recorridos DOM no sustituyen esa comprobación.
 
-La ejecución local y los manejadores están verificados; la configuración de Vercel está preparada, pero no se ha publicado ni comprobado un despliegue real. No se procesan pagos ni se emiten comprobantes fiscales.
+La ejecución local y el despliegue de Vercel están verificados a nivel HTTP y SQL. La prueba no sustituye una inspección visual manual del navegador. No se procesan pagos ni se emiten comprobantes fiscales.
 
 Quedan como ampliaciones la administración visual de cuentas adicionales, recuperación de acceso, auditoría detallada de reposiciones y copias de seguridad operativas.
