@@ -73,6 +73,9 @@
   }
   body.receipt-print .sale-receipt {
     color: #111 !important;
+    --bs-warning-text-emphasis: #664d03;
+    --bs-warning-bg-subtle: #fff3cd;
+    --bs-warning-border-subtle: #ffe69c;
     print-color-adjust: exact;
   }
   body.receipt-print .table-responsive {

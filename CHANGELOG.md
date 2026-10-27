@@ -1,5 +1,13 @@
 # Historial de cambios · NOVA SALUD
 
+## Modo nocturno · 27 de octubre de 2026
+
+- Botón Bootstrap de luna/sol en la barra superior, accesible con teclado y disponible también en móviles.
+- Tema claro/nocturno mediante `data-bs-theme`, con colores adaptados para inventario, ventas, tablas, formularios y modales.
+- Preferencia visual persistida en el navegador y aplicada antes del primer render para evitar destellos del tema claro.
+- Presentación de papel de las boletas conservada al imprimir.
+- 8 pruebas de interfaz aprobadas, incluida persistencia del tema al navegar y recargar la aplicación.
+
 ## Catálogo y boletas de presentación · 27 de octubre de 2026
 
 - Carga explícita e idempotente de 9 productos y 6 boletas de demostración en Turso, conservando el medicamento original del propietario.

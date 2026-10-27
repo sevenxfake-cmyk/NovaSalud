@@ -162,7 +162,7 @@ Las variables privadas se cargan desde .env.local localmente o desde Vercel en p
 
 ## 10. Instalación, uso y pruebas
 
-Consultar [README](../README.md) para los comandos exactos, primer acceso, prueba de persistencia y configuración de Vercel. Consultar [PRUEBAS](PRUEBAS.md) para las 33 pruebas locales y la verificación remota. Las boletas internas son imprimibles y las de ejemplo muestran de forma destacada que no tienen validez fiscal.
+Consultar [README](../README.md) para los comandos exactos, primer acceso, prueba de persistencia y configuración de Vercel. Consultar [PRUEBAS](PRUEBAS.md) para las 34 pruebas locales y la verificación remota. Las boletas internas son imprimibles y las de ejemplo muestran de forma destacada que no tienen validez fiscal. El modo nocturno utiliza el tema de Bootstrap y conserva la preferencia visual en el navegador, mientras los datos de inventario y ventas permanecen en Turso.
 
 La base remota no se sustituye por SQLite dentro de Vercel Functions. Se comprobó persistencia con un cliente independiente, rollback, rechazo por stock insuficiente, concurrencia e idempotencia. Los registros técnicos de la prueba se retiraron al terminar.
 

@@ -14,16 +14,18 @@ npm.cmd run test:public -- https://novasalud.vercel.app
 npm.cmd run dev
 ```
 
-## Pruebas automáticas locales: 33 aprobadas
+## Pruebas automáticas locales: 34 casos
 
 Los archivos se ejecutan uno por uno, con 256 MB de heap y 20 segundos por prueba. Estas pruebas no conectan con la base remota.
 
 - 12 pruebas de SQL/HTTP y seguridad: migraciones repetibles, restricciones y relaciones, edición por versión, transacciones, rollback después de descontar stock, idempotencia, concurrencia, sesiones, roles, alta inicial solo local, bloqueo temporal y mensajes sin datos privados.
-- 7 pruebas de interfaz: navegación y búsqueda, registro/duplicados y foco, venta e historial, reposición, errores del servidor, conexión verificada y boleta de demostración con preparación de impresión.
+- 8 pruebas de interfaz: navegación y búsqueda, registro/duplicados y foco, venta e historial, reposición, errores del servidor, conexión verificada, boleta imprimible y modo nocturno persistente al navegar y volver a montar la aplicación.
 - 4 pruebas de carga/migración: alta de nueve productos y seis boletas, repetición sin duplicados ni restablecimiento de stock, propagación de la marca de demostración a nuevas ventas y conservación de registros al actualizar un esquema anterior.
 - 10 pruebas de reglas y formatos: validación de precios/cantidades/códigos, importes, alertas y fechas de Lima.
 
 Las pruebas utilizan SQL en memoria y sesiones de prueba. Los ejemplos de la presentación se cargan separadamente con `db:seed-demo`; no se insertan al iniciar React ni al ejecutar `npm test`.
+
+La verificación del modo nocturno completó las 8 pruebas de interfaz. La preferencia se guarda únicamente en localStorage; no se guardan allí medicamentos, ventas ni credenciales. Los otros 26 casos corresponden al backend y las reglas ya verificados, sin cambios en esta actualización.
 
 ## Carga persistente de la presentación
 

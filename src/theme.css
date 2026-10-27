@@ -1,0 +1,378 @@
+.theme-toggle {
+  min-width: 34px;
+  min-height: 34px;
+  flex-shrink: 0;
+}
+.theme-toggle > .bi {
+  font-size: 15px;
+}
+
+/* Bootstrap adapta sus componentes con data-bs-theme. Estas reglas cubren
+   los colores propios del diseño de NOVA SALUD sin alterar el modo claro. */
+@media screen {
+  :root[data-bs-theme="dark"] {
+    color-scheme: dark;
+    color: #dce7f5;
+    background: #111b2c;
+    --brand: #78adff;
+    --ink: #e3ecfa;
+    --muted: #a3b4ce;
+    --line: #304057;
+    --surface: #1b293c;
+    --surface-soft: #22334a;
+    --surface-hover: #273b55;
+    --connection-ok: #73d4ae;
+    --bs-body-color: #dce7f5;
+    --bs-body-bg: #111b2c;
+    --bs-emphasis-color: #edf3fc;
+    --bs-secondary-color: #a3b4ce;
+    --bs-secondary-rgb: 163, 180, 206;
+    --bs-border-color: #304057;
+    --bs-danger-rgb: 255, 142, 153;
+  }
+  [data-bs-theme="dark"] .sidebar,
+  [data-bs-theme="dark"] .topbar,
+  [data-bs-theme="dark"] .card,
+  [data-bs-theme="dark"] .modal-content,
+  [data-bs-theme="dark"] .notification-toast,
+  [data-bs-theme="dark"] .history-totals,
+  [data-bs-theme="dark"] .alert-summary,
+  [data-bs-theme="dark"] .inventory-ring > div,
+  [data-bs-theme="dark"] .catalog-product,
+  [data-bs-theme="dark"] .date-chip,
+  [data-bs-theme="dark"] .skip-link {
+    background: var(--surface);
+    border-color: var(--line);
+  }
+
+  [data-bs-theme="dark"] .branch,
+  [data-bs-theme="dark"] .profile,
+  [data-bs-theme="dark"] .sidebar-version,
+  [data-bs-theme="dark"] .chart-footer,
+  [data-bs-theme="dark"] .health-link,
+  [data-bs-theme="dark"] .restock-item,
+  [data-bs-theme="dark"] .table-footer,
+  [data-bs-theme="dark"] .cart-item,
+  [data-bs-theme="dark"] .cart-panel .panel-heading,
+  [data-bs-theme="dark"] .catalog-bottom,
+  [data-bs-theme="dark"] .modal-header,
+  [data-bs-theme="dark"] .modal-actions,
+  [data-bs-theme="dark"] .app-footer,
+  [data-bs-theme="dark"] .help-note,
+  [data-bs-theme="dark"] .receipt-heading,
+  [data-bs-theme="dark"] .receipt-footer {
+    border-color: var(--line);
+  }
+
+  [data-bs-theme="dark"] .brand,
+  [data-bs-theme="dark"] .breadcrumb-label strong,
+  [data-bs-theme="dark"] .profile strong,
+  [data-bs-theme="dark"] .care-card strong,
+  [data-bs-theme="dark"] .product-cell strong,
+  [data-bs-theme="dark"] .restock-item strong,
+  [data-bs-theme="dark"] .health-legend strong,
+  [data-bs-theme="dark"] .inventory-ring strong,
+  [data-bs-theme="dark"] .alert-summary strong,
+  [data-bs-theme="dark"] .catalog-product h3,
+  [data-bs-theme="dark"] .catalog-bottom > strong,
+  [data-bs-theme="dark"] .cart-item-top strong,
+  [data-bs-theme="dark"] .cart-item-bottom > strong,
+  [data-bs-theme="dark"] .sale-total strong,
+  [data-bs-theme="dark"] .history-totals strong,
+  [data-bs-theme="dark"] .receipt-total strong,
+  [data-bs-theme="dark"] .confirmation-total strong,
+  [data-bs-theme="dark"] .receipt-heading > div > strong,
+  [data-bs-theme="dark"] .inventory-summary strong,
+  [data-bs-theme="dark"] .empty-state h3 {
+    color: var(--ink);
+  }
+
+  [data-bs-theme="dark"] .nav-item,
+  [data-bs-theme="dark"] .brand small,
+  [data-bs-theme="dark"] .nav-caption,
+  [data-bs-theme="dark"] .branch small,
+  [data-bs-theme="dark"] .profile small,
+  [data-bs-theme="dark"] .breadcrumb-label,
+  [data-bs-theme="dark"] .icon-button,
+  [data-bs-theme="dark"] .page-description,
+  [data-bs-theme="dark"] .panel-heading p,
+  [data-bs-theme="dark"] .metric-top,
+  [data-bs-theme="dark"] .metric-detail,
+  [data-bs-theme="dark"] .unit-label,
+  [data-bs-theme="dark"] .category-text,
+  [data-bs-theme="dark"] .product-cell small,
+  [data-bs-theme="dark"] .restock-item small,
+  [data-bs-theme="dark"] .health-legend > div > span,
+  [data-bs-theme="dark"] .chart-total > span,
+  [data-bs-theme="dark"] .chart-axis,
+  [data-bs-theme="dark"] .chart-column > span,
+  [data-bs-theme="dark"] .date-cell,
+  [data-bs-theme="dark"] .date-cell small,
+  [data-bs-theme="dark"] .subtle-label,
+  [data-bs-theme="dark"] .table-footer,
+  [data-bs-theme="dark"] .catalog-product p,
+  [data-bs-theme="dark"] .catalog-stock,
+  [data-bs-theme="dark"] .product-code,
+  [data-bs-theme="dark"] .cart-item-top small,
+  [data-bs-theme="dark"] .cart-demo-note,
+  [data-bs-theme="dark"] .price-note,
+  [data-bs-theme="dark"] .sale-total,
+  [data-bs-theme="dark"] .history-totals > div > span,
+  [data-bs-theme="dark"] .payment-label,
+  [data-bs-theme="dark"] .form-label,
+  [data-bs-theme="dark"] .form-text,
+  [data-bs-theme="dark"] .help-note,
+  [data-bs-theme="dark"] .help-note strong,
+  [data-bs-theme="dark"] .toast-body,
+  [data-bs-theme="dark"] .empty-state p,
+  [data-bs-theme="dark"] .receipt-meta,
+  [data-bs-theme="dark"] .receipt-heading small,
+  [data-bs-theme="dark"] .receipt-heading p,
+  [data-bs-theme="dark"] .receipt-total,
+  [data-bs-theme="dark"] .receipt-footer,
+  [data-bs-theme="dark"] .inventory-summary,
+  [data-bs-theme="dark"] .app-footer {
+    color: var(--muted);
+  }
+
+  [data-bs-theme="dark"] .brand-light,
+  [data-bs-theme="dark"] .sale-id,
+  [data-bs-theme="dark"] .text-link,
+  [data-bs-theme="dark"] .eyebrow,
+  [data-bs-theme="dark"] .demo-banner,
+  [data-bs-theme="dark"] .demo-banner strong,
+  [data-bs-theme="dark"] .health-link,
+  [data-bs-theme="dark"] .chart-footer a,
+  [data-bs-theme="dark"] .chart-column > .today-label,
+  [data-bs-theme="dark"] .restock-link {
+    color: #9bc2ff;
+  }
+
+  [data-bs-theme="dark"] .nav-item:hover,
+  [data-bs-theme="dark"] .icon-button:hover,
+  [data-bs-theme="dark"] .catalog-product.unavailable,
+  [data-bs-theme="dark"] .restock-link,
+  [data-bs-theme="dark"] .empty-icon,
+  [data-bs-theme="dark"] .count-chip,
+  [data-bs-theme="dark"] .demo-tag,
+  [data-bs-theme="dark"] .filter-tabs,
+  [data-bs-theme="dark"] .form-info,
+  [data-bs-theme="dark"] .global-search,
+  [data-bs-theme="dark"] .global-search kbd,
+  [data-bs-theme="dark"] .quantity-control button {
+    background: var(--surface-soft);
+    color: #b9cce7;
+    border-color: var(--line);
+  }
+  [data-bs-theme="dark"] .nav-item.active {
+    background: #253e62;
+    color: #9bc2ff;
+  }
+  [data-bs-theme="dark"] .branch-icon,
+  [data-bs-theme="dark"] .profile-avatar,
+  [data-bs-theme="dark"] .product-avatar,
+  [data-bs-theme="dark"] .product-avatar.category-1,
+  [data-bs-theme="dark"] .product-avatar.category-5,
+  [data-bs-theme="dark"] .metric-icon.blue {
+    background: #243b5c;
+    color: #a0c5ff;
+    border-color: #344c6f;
+  }
+  [data-bs-theme="dark"] .product-avatar.category-2,
+  [data-bs-theme="dark"] .metric-icon.violet {
+    background: #38304f;
+    color: #c9b6f5;
+  }
+  [data-bs-theme="dark"] .product-avatar.category-3 {
+    background: #213d3c;
+    color: #98cec0;
+  }
+  [data-bs-theme="dark"] .product-avatar.category-4,
+  [data-bs-theme="dark"] .metric-icon.amber,
+  [data-bs-theme="dark"] .alert-heading-icon,
+  [data-bs-theme="dark"] .nav-count {
+    background: #423824;
+    color: #f1cc7e;
+  }
+  [data-bs-theme="dark"] .metric-icon.red {
+    background: #472d37;
+    color: #f2b0bc;
+  }
+  [data-bs-theme="dark"] .metric-detail.amber {
+    background: transparent;
+    color: #e9c77e;
+  }
+  [data-bs-theme="dark"] .metric-detail.red {
+    background: transparent;
+    color: #f0a4b3;
+  }
+  [data-bs-theme="dark"] .status-badge.ok {
+    background: #203e35;
+    color: #8ee0b9;
+  }
+  [data-bs-theme="dark"] .status-badge.low {
+    background: #423824;
+    color: #f1cc7e;
+  }
+  [data-bs-theme="dark"] .status-badge.out {
+    background: #472d37;
+    color: #ffb2bb;
+  }
+  [data-bs-theme="dark"] .care-card {
+    background: linear-gradient(130deg, #1d304b, #203a44);
+    border-color: #30445d;
+  }
+  [data-bs-theme="dark"] .care-card p {
+    color: #a7bad2;
+  }
+  [data-bs-theme="dark"] .care-card:after {
+    color: #2a435e;
+  }
+
+  [data-bs-theme="dark"] .form-control,
+  [data-bs-theme="dark"] .form-select,
+  [data-bs-theme="dark"] .quantity-control input {
+    background-color: #142237;
+    color: var(--ink);
+    border-color: #3a4c66;
+  }
+  [data-bs-theme="dark"] .form-control::placeholder {
+    color: #92a4be;
+  }
+  [data-bs-theme="dark"] .form-control:focus,
+  [data-bs-theme="dark"] .form-select:focus,
+  [data-bs-theme="dark"] .global-search:focus-within {
+    border-color: #719fe6;
+    box-shadow: 0 0 0 3px #4e8ade29;
+  }
+  [data-bs-theme="dark"] .quantity-control {
+    border-color: var(--line);
+  }
+  [data-bs-theme="dark"] .global-search input {
+    color: var(--ink);
+  }
+  [data-bs-theme="dark"] .filter-tabs button {
+    color: #a7bad2;
+  }
+  [data-bs-theme="dark"] .filter-tabs button.selected {
+    background: #314762;
+    color: #c5dcff;
+  }
+  [data-bs-theme="dark"] .btn-outline-secondary {
+    --bs-btn-color: #c5d4e8;
+    --bs-btn-border-color: #4c607e;
+    --bs-btn-hover-bg: #314762;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-border-color: #6e8db8;
+  }
+  [data-bs-theme="dark"] .btn-outline-primary {
+    --bs-btn-color: #9bc2ff;
+    --bs-btn-border-color: #4e71a4;
+  }
+  [data-bs-theme="dark"] .btn-light {
+    --bs-btn-bg: #2a3c54;
+    --bs-btn-border-color: #3a506f;
+    --bs-btn-color: #deebfc;
+    --bs-btn-hover-bg: #344c6e;
+    --bs-btn-hover-color: #fff;
+  }
+  [data-bs-theme="dark"] .btn-white {
+    background: #2b4365;
+    border-color: #5475a0;
+    color: #e2eeff;
+  }
+
+  [data-bs-theme="dark"] .table {
+    --bs-table-color: #d4e0f2;
+    --bs-table-bg: var(--surface);
+    --bs-table-border-color: var(--line);
+  }
+  [data-bs-theme="dark"] .table > thead > tr > th {
+    background: #172438;
+    color: #b0c3df;
+    border-color: var(--line);
+  }
+  [data-bs-theme="dark"] .table tbody tr:hover td {
+    background: #233850;
+  }
+  [data-bs-theme="dark"] .text-bg-light {
+    background: #2b3c54 !important;
+    color: #d8e5f6 !important;
+  }
+  [data-bs-theme="dark"] .chart-gridlines span {
+    border-color: #35455e;
+  }
+  [data-bs-theme="dark"] .stock-level .progress {
+    background: #304057;
+  }
+  [data-bs-theme="dark"] .quick-sale-banner {
+    background: linear-gradient(115deg, #213a5e, #1e3857, #223e66);
+    border-color: #3a5780;
+  }
+  [data-bs-theme="dark"] .quick-sale-banner h2 {
+    color: #d0e3ff;
+  }
+  [data-bs-theme="dark"] .quick-sale-banner p {
+    color: #b4c9e5;
+  }
+  [data-bs-theme="dark"] .quick-sale-icon {
+    background: #2b466c;
+    border-color: #45648d;
+    color: #b9d6ff;
+  }
+  [data-bs-theme="dark"] .banner-decoration {
+    color: #2e4d78;
+  }
+  [data-bs-theme="dark"] .alert-summary > .bi {
+    background: #263c5b;
+    color: #abcaff;
+  }
+  [data-bs-theme="dark"] .alert-summary.warning > .bi {
+    background: #423824;
+    color: #f1cc7e;
+  }
+  [data-bs-theme="dark"] .alert-summary.critical > .bi {
+    background: #472d37;
+    color: #ffb2bb;
+  }
+  [data-bs-theme="dark"] .alert-summary span {
+    color: #b5c5dc;
+  }
+  [data-bs-theme="dark"] .modal-surface {
+    background: #020812aa;
+  }
+}
+
+@media (max-width: 575px) {
+  .topbar {
+    gap: 8px;
+    padding-inline: 12px;
+  }
+  .topbar-left {
+    flex: 1;
+    min-width: 0;
+  }
+  .topbar-right {
+    flex-shrink: 0;
+  }
+  .breadcrumb-label {
+    min-width: 0;
+  }
+  .breadcrumb-label strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 380px) {
+  .topbar-right {
+    gap: 6px;
+  }
+  .topbar .profile {
+    padding-left: 6px;
+  }
+  .breadcrumb-label {
+    gap: 5px;
+  }
+}

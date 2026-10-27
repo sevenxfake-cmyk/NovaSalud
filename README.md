@@ -8,6 +8,8 @@ Repositorio: [sevenxfake-cmyk/NovaSalud](https://github.com/sevenxfake-cmyk/Nova
 
 Aplicación publicada: **[https://novasalud.vercel.app](https://novasalud.vercel.app)**. Se verificaron en Production la conexión, el acceso, el inventario persistente, las ventas y la concurrencia. El primer administrador debe crearse una sola vez desde la ejecución local; después se utiliza ese mismo usuario en el enlace público.
 
+La barra superior incluye un botón Bootstrap de luna/sol para alternar entre modo nocturno y claro. Se recuerda la preferencia en ese navegador y se aplica desde la primera carga. El tema utiliza `data-bs-theme`; los datos del negocio continúan guardándose en Turso. Las boletas mantienen su presentación de papel al imprimir.
+
 ## Ejecutar localmente
 
 Usar Node 22.19 o posterior compatible con Vite; se verificó con Node 26.12.1. Desde la carpeta NOVA_SALUD:
@@ -142,7 +144,7 @@ npm.cmd run test:remote
 npm.cmd run test:public -- https://novasalud.vercel.app
 ```
 
-`npm test` ejecuta **33 pruebas** secuenciales con límite de memoria: SQL en memoria, HTTP, formularios, carga de ejemplos, migraciones, boletas y reglas. No utiliza la base remota ni sus credenciales.
+`npm test` ejecuta **34 pruebas** secuenciales con límite de memoria: SQL en memoria, HTTP, formularios, tema persistente, carga de ejemplos, migraciones, boletas y reglas. No utiliza la base remota ni sus credenciales.
 
 `test:remote` es una comprobación **explícita contra Turso**. Crea un medicamento y un usuario técnicos temporales, verifica alta/edición, lectura con otro cliente, rollback, stock insuficiente, dos ventas simultáneas e idempotencia. Al finalizar retira exclusivamente los registros de esa ejecución. No borra medicamentos del usuario.
 

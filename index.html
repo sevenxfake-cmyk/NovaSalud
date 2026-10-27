@@ -5,6 +5,23 @@
     <link rel="icon" type="image/svg+xml" href="/nova-salud.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#1763dc" />
+    <script>
+      (() => {
+        let theme = window.matchMedia?.("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+        try {
+          const saved = localStorage.getItem("nova-salud-theme");
+          if (saved === "dark" || saved === "light") theme = saved;
+        } catch {
+          /* Aplicar el tema aunque el almacenamiento esté bloqueado. */
+        }
+        document.documentElement.setAttribute("data-bs-theme", theme);
+        document
+          .querySelector('meta[name="theme-color"]')
+          .setAttribute("content", theme === "dark" ? "#111b2c" : "#1763dc");
+      })();
+    </script>
     <meta
       name="description"
       content="NOVA SALUD: gestión de inventario, alertas de reposición y ventas para tu botica."

@@ -10,6 +10,8 @@ import { usePharmacy } from "../context/pharmacy";
 import { stockStatus, dateLabel } from "../lib/format";
 import { Icon } from "./UI";
 import AuthPanel from "./AuthPanel";
+import ThemeToggle from "./ThemeToggle";
+import "../theme.css";
 
 const links = [
   { to: "/", label: "Resumen general", icon: "grid-1x2" },
@@ -134,7 +136,8 @@ export default function Layout() {
               <Icon name="list" />
             </button>
             <span className="breadcrumb-label">
-              Mi botica <Icon name="chevron-right" />{" "}
+              <span className="d-none d-sm-inline">Mi botica</span>{" "}
+              <Icon name="chevron-right" className="d-none d-sm-inline" />{" "}
               <strong>
                 {links.find((link) => link.to === location.pathname)?.label ??
                   "Página no encontrada"}
@@ -159,6 +162,7 @@ export default function Layout() {
               />
               <kbd>↵</kbd>
             </form>
+            <ThemeToggle />
             <Link
               className="icon-button notification-button"
               to="/alertas"
@@ -207,14 +211,16 @@ export default function Layout() {
               className="connection-label"
               role="status"
               style={
-                connection === "connected" ? { color: "#278563" } : undefined
+                connection === "connected"
+                  ? { color: "var(--connection-ok, #278563)" }
+                  : undefined
               }
             >
               <span
                 className="status-dot"
                 style={
                   connection === "connected"
-                    ? { background: "#278563" }
+                    ? { background: "var(--connection-ok, #278563)" }
                     : undefined
                 }
               />

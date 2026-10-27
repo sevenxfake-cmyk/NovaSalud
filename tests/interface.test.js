@@ -51,6 +51,8 @@ before(async () => {
 });
 
 beforeEach(async () => {
+  document.documentElement.setAttribute("data-bs-theme", "light");
+  window.localStorage.removeItem("nova-salud-theme");
   database = createClient({ url: "file::memory:" });
   await migrate(database);
   await database.execute({
@@ -209,6 +211,33 @@ test("interfaz: navega por las cinco pantallas y encuentra categorías sin tilde
     "analgesicos",
   );
   assert.equal(document.querySelectorAll("tbody tr").length, 2);
+});
+
+test("interfaz: el tema nocturno de Bootstrap permanece al navegar y volver a montar la aplicación", async () => {
+  await click('button[aria-label="Activar modo nocturno"]');
+  assert.equal(document.documentElement.getAttribute("data-bs-theme"), "dark");
+  assert.equal(window.localStorage.getItem("nova-salud-theme"), "dark");
+  assert.equal(
+    get('button[aria-label="Activar modo claro"]').getAttribute("aria-pressed"),
+    "true",
+  );
+  await click('.sidebar nav a[href="/inventario"]');
+  assert.equal(document.documentElement.getAttribute("data-bs-theme"), "dark");
+  await act(async () => {
+    root.unmount();
+  });
+  document.documentElement.removeAttribute("data-bs-theme");
+  root = createRoot(container);
+  await act(async () => {
+    root.render(createElement(App));
+  });
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 30));
+  });
+  assert.equal(document.documentElement.getAttribute("data-bs-theme"), "dark");
+  await click('button[aria-label="Activar modo claro"]');
+  assert.equal(document.documentElement.getAttribute("data-bs-theme"), "light");
+  assert.equal(window.localStorage.getItem("nova-salud-theme"), "light");
 });
 
 test("interfaz: crea un producto, rechaza un código duplicado y mantiene el foco en el modal", async () => {
