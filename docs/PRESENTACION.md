@@ -6,7 +6,7 @@ El profesor podrá abrir la URL pública del proyecto publicado en Vercel e inic
 
 ## Preparación antes de la presentación
 
-1. Crear el primer administrador desde la ejecución local de NOVA SALUD. Usar credenciales elegidas por el propietario; no existen claves predeterminadas.
+1. Abrir NOVA SALUD y seleccionar Crear cuenta, o iniciar sesión con una cuenta existente. Cada cuenta tiene inventario e historial propios.
 2. Subir a GitHub la versión que incluye API y Turso. La primera entrega de interfaz de demostración no tiene persistencia remota.
 3. Iniciar sesión en Vercel y conectar el proyecto con el repositorio sevenxfake-cmyk/NovaSalud.
 4. Configurar TURSO_DATABASE_URL y TURSO_AUTH_TOKEN como variables privadas del entorno Production, con los mismos valores de la base ya migrada. No subir .env.local.
@@ -43,4 +43,4 @@ El panel de Vercel se utiliza para administrar el despliegue; la demostración a
 
 ## Estado
 
-El despliegue está publicado y se verificaron sus flujos reales de API: acceso con cookie segura, alta/edición y lectura persistente, ventas, historial, idempotencia, concurrencia y recarga de rutas. La cuenta y los medicamentos técnicos utilizados se retiraron al terminar. El propietario debe crear su administrador definitivo desde la aplicación local; esa cuenta se guarda en la misma base y permite entrar al enlace público sin volver a desplegar.
+El despliegue está publicado. El registro se realiza directamente desde la URL pública y no requiere acceso a GitHub, Turso ni Vercel. Si el profesor se registra, recibe diez productos de ejemplo en un inventario independiente y no ve los registros del alumno. Para mostrar los datos ya preparados por el alumno, se utiliza su misma cuenta existente.

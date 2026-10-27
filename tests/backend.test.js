@@ -4,7 +4,11 @@ import { createClient } from "@libsql/client";
 import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
 import { migrate, health } from "../server/schema.js";
-import { getSnapshot, registerSale, saveProduct } from "../server/store.js";
+import {
+  getSnapshot as scopedSnapshot,
+  registerSale,
+  saveProduct as scopedSave,
+} from "../server/store.js";
 import { createApplication } from "../server/application.js";
 import { publicError } from "../server/errors.js";
 import { passwordHash, sessionCookie } from "../server/auth.js";
@@ -13,6 +17,9 @@ let db;
 let http;
 let base;
 const userId = "user-test";
+const getSnapshot = (database) => scopedSnapshot(database, userId);
+const saveProduct = (database, input, id = null) =>
+  scopedSave(database, input, id, userId);
 const sample = {
   code: "TEST-001",
   name: "Medicamento de prueba",
@@ -79,11 +86,11 @@ test("SQL: restricciones de código, stock y claves foráneas", async () => {
   await saveProduct(db, sample);
   await assert.rejects(saveProduct(db, sample));
   await assert.rejects(
-    db.execute({ sql: "UPDATE productos SET stock=?", args: [-1] }),
+    db.execute({ sql: "UPDATE productos_cuenta SET stock=?", args: [-1] }),
   );
   await assert.rejects(
     db.execute({
-      sql: "INSERT INTO ventas(id,usuario_id,fecha,total_centimos,medio_pago,clave_idempotencia,solicitud_hash) VALUES (?,?,?,?,?,?,?)",
+      sql: "INSERT INTO ventas_cuenta(id,usuario_id,fecha,total_centimos,medio_pago,clave_idempotencia,solicitud_hash) VALUES (?,?,?,?,?,?,?)",
       args: [
         "invalid",
         "missing",
@@ -179,6 +186,9 @@ test("SQL: dos ventas simultáneas no venden dos veces la última unidad", async
 
 test("SQL: un fallo posterior al descuento revierte stock, versión, cabecera y detalles", async () => {
   const product = await saveProduct(db, sample);
+  await db.execute(
+    "CREATE TRIGGER fail_test_sale BEFORE INSERT ON ventas_cuenta BEGIN SELECT RAISE(ABORT,'fallo de prueba'); END",
+  );
   await assert.rejects(
     registerSale(
       db,
@@ -188,7 +198,7 @@ test("SQL: un fallo posterior al descuento revierte stock, versión, cabecera y 
         payment: "Efectivo",
         requestId: randomUUID(),
       },
-      "usuario-inexistente",
+      userId,
     ),
   );
   const snapshot = await getSnapshot(db);
@@ -197,7 +207,7 @@ test("SQL: un fallo posterior al descuento revierte stock, versión, cabecera y 
   assert.equal(snapshot.sales.length, 0);
   assert.equal(
     Number(
-      (await db.execute("SELECT COUNT(*) AS total FROM detalle_ventas")).rows[0]
+      (await db.execute("SELECT COUNT(*) AS total FROM detalle_cuenta")).rows[0]
         .total,
     ),
     0,

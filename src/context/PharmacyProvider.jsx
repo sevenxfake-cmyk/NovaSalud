@@ -21,18 +21,22 @@ export function PharmacyProvider({ children }) {
   const saleBusy = useRef(false);
   const productBusy = useRef(false);
   const pendingSale = useRef(null);
+  const accountEpoch = useRef(0);
 
   const notify = useCallback((text, type = "success") => {
     setNotice({ id: crypto.randomUUID(), text, type });
   }, []);
 
   const refresh = useCallback(async (signal) => {
+    const epoch = accountEpoch.current;
     try {
       const snapshot = await apiRequest("/state", { signal });
+      if (epoch !== accountEpoch.current) return snapshot;
       setData(snapshot);
       setLoadError("");
       return snapshot;
     } catch (error) {
+      if (epoch !== accountEpoch.current) throw error;
       if (error.status === 401) {
         setUser(null);
         setData({ products: [], sales: [] });
@@ -108,13 +112,23 @@ export function PharmacyProvider({ children }) {
   }, [user, refresh]);
 
   async function login(credentials) {
+    accountEpoch.current++;
     const result = await apiRequest("/auth", {
       method: "POST",
       body: credentials,
     });
+    setData({ products: [], sales: [] });
+    setCart([]);
+    setGlobalSearch("");
+    setNotice(null);
+    pendingSale.current = null;
     setUser(result.user);
     setAuthState({ needsSetup: false, canSetup: false });
     await refresh();
+    if (credentials.action === "register")
+      notify(
+        "Cuenta creada. Tu inventario personal incluye 10 productos de demostración.",
+      );
   }
 
   async function logout() {
@@ -124,6 +138,7 @@ export function PharmacyProvider({ children }) {
       notify(error.message, "danger");
       return;
     }
+    accountEpoch.current++;
     setUser(null);
     setCart([]);
     setData({ products: [], sales: [] });

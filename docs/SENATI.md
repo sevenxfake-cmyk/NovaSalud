@@ -51,10 +51,11 @@ El navegador recibe productos, ventas y el estado público de conexión. Nunca r
 
 ```mermaid
 erDiagram
-  usuarios ||--o{ ventas : registra
+  usuarios ||--o{ ventas_cuenta : registra
+  usuarios ||--o{ productos_cuenta : administra
   usuarios ||--o{ sesiones : inicia
-  ventas ||--|{ detalle_ventas : contiene
-  productos ||--o{ detalle_ventas : referencia
+  ventas_cuenta ||--|{ detalle_cuenta : contiene
+  productos_cuenta ||--o{ detalle_cuenta : referencia
   usuarios {
     text id PK
     text usuario UK
@@ -67,8 +68,9 @@ erDiagram
     text usuario_id FK
     integer expira_en
   }
-  productos {
+  productos_cuenta {
     text id PK
+    text usuario_id FK
     text codigo UK
     text nombre
     text categoria
@@ -81,7 +83,7 @@ erDiagram
     text creado_en
     text actualizado_en
   }
-  ventas {
+  ventas_cuenta {
     text id PK
     text usuario_id FK
     text fecha
@@ -91,8 +93,9 @@ erDiagram
     text solicitud_hash
     integer es_demo
   }
-  detalle_ventas {
+  detalle_cuenta {
     text id PK
+    text usuario_id FK
     text venta_id FK
     text producto_id FK
     text codigo_historico
@@ -154,7 +157,7 @@ La API confirma el guardado antes de cerrar el formulario. Los medicamentos se r
 
 Las alertas se calculan a partir del inventario real. Guardar productos, reponer o vender actualiza el estado. Las vistas se refrescan al recuperar el foco y periódicamente mientras existe una sesión.
 
-El primer administrador se crea una sola vez y únicamente desde el servidor local. El administrador registra y edita productos; los roles admin y vendedor pueden consultar y vender. Las contraseñas se guardan con scrypt, sal aleatoria y comparación segura.
+Cada usuario puede registrarse con contraseña confirmada y recibe diez productos de demostración propios. La cuenta es administradora únicamente de su inventario; el identificador de propietario se obtiene de la sesión y se aplica a productos, ventas y detalles. Los códigos son únicos dentro de cada cuenta y las relaciones compuestas prohíben cruzar propietarios. Las contraseñas se guardan con scrypt, sal aleatoria y comparación segura.
 
 Las sesiones usan tokens aleatorios de 256 bits, guardan únicamente su hash y expiran en 8 horas. La cookie es HttpOnly y SameSite=Strict; en producción incorpora Secure. Hay validación de origen, cuerpo JSON y límite de tamaño, además de bloqueo temporal tras intentos de acceso fallidos.
 
@@ -162,7 +165,7 @@ Las variables privadas se cargan desde .env.local localmente o desde Vercel en p
 
 ## 10. Instalación, uso y pruebas
 
-Consultar [README](../README.md) para los comandos exactos, primer acceso, prueba de persistencia y configuración de Vercel. Consultar [PRUEBAS](PRUEBAS.md) para las 34 pruebas locales y la verificación remota. Las boletas internas son imprimibles y las de ejemplo muestran de forma destacada que no tienen validez fiscal. El modo nocturno utiliza el tema de Bootstrap y conserva la preferencia visual en el navegador, mientras los datos de inventario y ventas permanecen en Turso.
+Consultar [README](../README.md) para los comandos exactos, primer acceso, prueba de persistencia y configuración de Vercel. Consultar [PRUEBAS](PRUEBAS.md) para las 42 pruebas locales y la verificación remota. Las boletas internas son imprimibles y las de ejemplo muestran de forma destacada que no tienen validez fiscal. El modo nocturno conserva su preferencia visual en el navegador, mientras los registros privados de cada cuenta permanecen en Turso.
 
 La base remota no se sustituye por SQLite dentro de Vercel Functions. Se comprobó persistencia con un cliente independiente, rollback, rechazo por stock insuficiente, concurrencia e idempotencia. Los registros técnicos de la prueba se retiraron al terminar.
 

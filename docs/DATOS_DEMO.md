@@ -1,5 +1,7 @@
 # Productos y boletas de presentación
 
+Las cuentas nuevas reciben diez productos DEMO-001 a DEMO-010 en su propio inventario, con IDs y existencias independientes y sin ventas iniciales. Los nueve productos y seis boletas descritos a continuación corresponden a la carga histórica del propietario original; no se comparten con cuentas nuevas.
+
 Los primeros ejemplos de la interfaz estaban en memoria. Al pasar a SQL no se importaron automáticamente. La carga persistente solicitada incorpora nueve productos y seis boletas en Turso, manteniendo el Paracetamol MED-001 registrado por el propietario.
 
 ## Catálogo académico

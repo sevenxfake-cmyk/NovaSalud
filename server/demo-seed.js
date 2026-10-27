@@ -66,18 +66,23 @@ export const presentationSales = [
   },
 ];
 
-export function seedRequestId(number) {
+export function seedRequestId(number, userId = "") {
   const hash = createHash("sha256")
-    .update(`nova-salud-presentation-v1-${number}`)
+    .update(`nova-salud-presentation-v1-${number}${userId ? `:${userId}` : ""}`)
     .digest("hex")
     .slice(0, 32);
   return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-${hash.slice(12, 16)}-${hash.slice(16, 20)}-${hash.slice(20)}`;
 }
 
-export async function seedPresentation(db, now = new Date()) {
+export async function seedPresentation(db, now = new Date(), accountId = null) {
   const admin = (
     await db.execute(
-      "SELECT id FROM usuarios WHERE rol='admin' ORDER BY creado_en,id LIMIT 1",
+      accountId
+        ? {
+            sql: "SELECT id FROM usuarios WHERE id=? AND rol='admin'",
+            args: [accountId],
+          }
+        : "SELECT id FROM usuarios WHERE rol='admin' ORDER BY creado_en,id LIMIT 1",
     )
   ).rows[0];
   if (!admin)
@@ -87,7 +92,7 @@ export async function seedPresentation(db, now = new Date()) {
     );
   const createdProducts = await inTransaction(db, async (tx) => {
     const commands = presentationProducts.map((product) => ({
-      sql: "INSERT OR IGNORE INTO productos(id,codigo,nombre,categoria,presentacion,precio_centimos,stock,stock_minimo,creado_en,actualizado_en,es_demo) VALUES (?,?,?,?,?,?,?,?,?,?,1)",
+      sql: "INSERT OR IGNORE INTO productos_cuenta(id,codigo,nombre,categoria,presentacion,precio_centimos,stock,stock_minimo,creado_en,actualizado_en,usuario_id,es_demo) VALUES (?,?,?,?,?,?,?,?,?,?,?,1)",
       args: [
         randomUUID(),
         product.code,
@@ -99,12 +104,13 @@ export async function seedPresentation(db, now = new Date()) {
         product.minStock,
         now.toISOString(),
         now.toISOString(),
+        admin.id,
       ],
     }));
     const inserted = await tx.batch(commands);
     const found = await tx.execute({
-      sql: `SELECT codigo,es_demo FROM productos WHERE codigo IN (${presentationProducts.map(() => "?").join(",")})`,
-      args: presentationProducts.map((product) => product.code),
+      sql: `SELECT codigo,es_demo FROM productos_cuenta WHERE usuario_id=? AND codigo IN (${presentationProducts.map(() => "?").join(",")})`,
+      args: [admin.id, ...presentationProducts.map((product) => product.code)],
     });
     if (found.rows.some((row) => Number(row.es_demo) !== 1))
       throw new AppError(
@@ -117,18 +123,18 @@ export async function seedPresentation(db, now = new Date()) {
   let createdSales = 0;
   let skippedSales = 0;
   for (const plan of presentationSales) {
-    const requestId = seedRequestId(plan.number);
+    const requestId = seedRequestId(plan.number, admin.id);
     const existing = await db.execute({
-      sql: "SELECT id FROM ventas WHERE clave_idempotencia=?",
-      args: [requestId],
+      sql: "SELECT id FROM ventas_cuenta WHERE usuario_id=? AND clave_idempotencia IN (?,?)",
+      args: [admin.id, requestId, seedRequestId(plan.number)],
     });
     if (existing.rows.length) {
       skippedSales++;
       continue;
     }
     const records = await db.execute({
-      sql: `SELECT id,codigo,precio_centimos FROM productos WHERE codigo IN (${plan.items.map(() => "?").join(",")}) AND es_demo=1`,
-      args: plan.items.map(([code]) => code),
+      sql: `SELECT id,codigo,precio_centimos FROM productos_cuenta WHERE usuario_id=? AND codigo IN (${plan.items.map(() => "?").join(",")}) AND es_demo=1`,
+      args: [admin.id, ...plan.items.map(([code]) => code)],
     });
     const items = plan.items.map(([code, quantity]) => {
       const product = records.rows.find((row) => row.codigo === code);
@@ -159,7 +165,7 @@ export async function seedPresentation(db, now = new Date()) {
       },
       admin.id,
       {
-        id: `DEMO-B001-${String(plan.number).padStart(6, "0")}`,
+        id: `DEMO-B001-${String(plan.number).padStart(6, "0")}-${createHash("sha256").update(admin.id).digest("hex").slice(0, 6)}`,
         date,
         demo: true,
       },

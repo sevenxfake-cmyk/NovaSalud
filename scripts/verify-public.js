@@ -163,7 +163,7 @@ try {
     Number(
       (
         await db.execute({
-          sql: "SELECT COUNT(*) AS total FROM ventas WHERE usuario_id=?",
+          sql: "SELECT COUNT(*) AS total FROM ventas_cuenta WHERE usuario_id=?",
           args: [userId],
         })
       ).rows[0].total,
@@ -205,15 +205,15 @@ try {
     try {
       await inTransaction(db, async (tx) => {
         await tx.execute({
-          sql: "DELETE FROM detalle_ventas WHERE venta_id IN (SELECT id FROM ventas WHERE usuario_id=?)",
+          sql: "DELETE FROM detalle_cuenta WHERE venta_id IN (SELECT id FROM ventas_cuenta WHERE usuario_id=?)",
           args: [userId],
         });
         await tx.execute({
-          sql: "DELETE FROM ventas WHERE usuario_id=?",
+          sql: "DELETE FROM ventas_cuenta WHERE usuario_id=?",
           args: [userId],
         });
         await tx.execute({
-          sql: "DELETE FROM productos WHERE codigo=? AND nombre=?",
+          sql: "DELETE FROM productos_cuenta WHERE codigo=? AND nombre=?",
           args: [code, name],
         });
         await tx.execute({

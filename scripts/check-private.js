@@ -28,16 +28,19 @@ try {
       .some((name) => name && name !== ".env.example")
   )
     throw new Error();
-  const secrets = [
-    process.env.TURSO_DATABASE_URL,
-    process.env.TURSO_AUTH_TOKEN,
-  ].map((value) => value?.trim()).filter(Boolean);
+  const secrets = [process.env.TURSO_DATABASE_URL, process.env.TURSO_AUTH_TOKEN]
+    .map((value) => value?.trim())
+    .filter(Boolean);
   if (secrets.length !== 2) throw new Error();
-  const sourceFiles = spawnSync('git', ['ls-files', '-z'], { encoding: 'utf8', windowsHide: true });
+  const sourceFiles = spawnSync("git", ["ls-files", "-z"], {
+    encoding: "utf8",
+    windowsHide: true,
+  });
   if (sourceFiles.status !== 0) throw new Error();
-  for (const file of sourceFiles.stdout.split('\0').filter(Boolean)) {
+  for (const file of sourceFiles.stdout.split("\0").filter(Boolean)) {
     const contents = readFileSync(file);
-    if (secrets.some((secret) => contents.includes(Buffer.from(secret)))) throw new Error();
+    if (secrets.some((secret) => contents.includes(Buffer.from(secret))))
+      throw new Error();
   }
   for (const file of files("dist")) {
     if (!/\.(js|css|html|map)$/.test(file)) continue;

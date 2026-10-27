@@ -8,6 +8,7 @@ import {
 import { promisify } from "node:util";
 import { AppError } from "./errors.js";
 import { inTransaction } from "./db.js";
+import { createAccountCatalog } from "./account-catalog.js";
 
 const derive = promisify(scrypt);
 export const hashToken = (value) =>
@@ -109,14 +110,79 @@ export async function authenticationState(db, req, setupAllowed) {
   const user = await currentUser(db, req);
   const count = await db.execute("SELECT COUNT(*) AS total FROM usuarios");
   const needsSetup = Number(count.rows[0].total) === 0;
-  return { user, needsSetup, canSetup: needsSetup && setupAllowed };
+  return {
+    user,
+    needsSetup,
+    canSetup: needsSetup && setupAllowed,
+    registrationEnabled: true,
+  };
 }
 
-export async function authenticate(db, req, input, setupAllowed) {
+async function registrationSlot(db, req, production) {
+  const address = production
+    ? String(
+        req.headers["x-vercel-forwarded-for"] ??
+          req.headers["x-forwarded-for"] ??
+          req.socket?.remoteAddress ??
+          "unknown",
+      )
+        .split(",")[0]
+        .trim()
+    : (req.socket?.remoteAddress ?? "local");
+  const now = Date.now();
+  const result = await db.execute({
+    sql: "INSERT INTO intentos_registro(identificador,ventana,intentos) VALUES (?,?,1) ON CONFLICT(identificador) DO UPDATE SET intentos=CASE WHEN ventana<=? THEN 1 ELSE intentos+1 END, ventana=CASE WHEN ventana<=? THEN ? ELSE ventana END RETURNING intentos",
+    args: [hashToken(address), now, now - 3600000, now - 3600000, now],
+  });
+  if (Number(result.rows[0].intentos) > 20)
+    throw new AppError(
+      429,
+      "Se alcanzó el límite temporal de registros desde esta conexión. Inténtalo más tarde.",
+    );
+}
+
+export async function authenticate(
+  db,
+  req,
+  input,
+  setupAllowed,
+  production = false,
+) {
   const { username, password } = credentials(input);
   const token = randomBytes(32).toString("hex");
   let user;
-  if (input.action === "setup") {
+  if (input.action === "register") {
+    if (input.passwordConfirmation !== password)
+      throw new AppError(400, "Las contraseñas no coinciden.");
+    await registrationSlot(db, req, production);
+    const hashed = await passwordHash(password);
+    user = await inTransaction(db, async (tx) => {
+      if (
+        (
+          await tx.execute({
+            sql: "SELECT id FROM usuarios WHERE usuario=?",
+            args: [username],
+          })
+        ).rows.length
+      )
+        throw new AppError(
+          409,
+          "Este usuario ya está registrado. Elige otro nombre o inicia sesión.",
+        );
+      const id = randomUUID();
+      await tx.execute({
+        sql: "INSERT INTO usuarios(id,usuario,password_hash,rol,creado_en) VALUES (?,?,?,?,?)",
+        args: [id, username, hashed, "admin", new Date().toISOString()],
+      });
+      await createAccountCatalog(tx, id);
+      await tx.execute({
+        sql: "INSERT INTO sesiones(token_hash,usuario_id,expira_en) VALUES (?,?,?)",
+        args: [hashToken(token), id, Date.now() + LIFETIME * 1000],
+      });
+      return { id, username, role: "admin" };
+    });
+    return { user, token };
+  } else if (input.action === "setup") {
     if (!setupAllowed)
       throw new AppError(
         403,

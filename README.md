@@ -6,7 +6,7 @@ Inventario, alertas y ventas conectados a **Turso Cloud** mediante una API Node 
 
 Repositorio: [sevenxfake-cmyk/NovaSalud](https://github.com/sevenxfake-cmyk/NovaSalud).
 
-Aplicación publicada: **[https://novasalud.vercel.app](https://novasalud.vercel.app)**. Se verificaron en Production la conexión, el acceso, el inventario persistente, las ventas y la concurrencia. El primer administrador debe crearse una sola vez desde la ejecución local; después se utiliza ese mismo usuario en el enlace público.
+Aplicación publicada: **[https://novasalud.vercel.app](https://novasalud.vercel.app)**. Cada persona puede registrarse con usuario y contraseña y recibe un inventario propio. Los productos, las ventas, el historial y las alertas están separados por cuenta.
 
 La barra superior incluye un botón Bootstrap de luna/sol para alternar entre modo nocturno y claro. Se recuerda la preferencia en ese navegador y se aplica desde la primera carga. El tema utiliza `data-bs-theme`; los datos del negocio continúan guardándose en Turso. Las boletas mantienen su presentación de papel al imprimir.
 
@@ -44,16 +44,16 @@ Completar los valores reales en el equipo, tomando como plantilla `.env.example`
 
 ### Primer acceso
 
-La primera vez, la aplicación muestra **Configura tu administrador**. Crear un usuario y una contraseña de 12 a 128 caracteres. No hay cuentas ni contraseñas predeterminadas.
+Abrir el enlace y seleccionar **Crear cuenta**. Elegir un usuario único, una contraseña de 12 a 128 caracteres y repetirla para confirmar. El registro inicia sesión y crea 10 productos de demostración independientes, sin copiar ventas ni registros privados de otras cuentas.
 
-Este alta inicial solo se permite desde el servidor local, con conexión de bucle local y mientras la tabla de usuarios esté vacía. En Vercel está desactivada. El administrador creado localmente queda guardado en la misma base de Turso y podrá iniciar sesión después del despliegue.
+Cada persona administra únicamente su propio inventario. Dos cuentas pueden usar el mismo código de medicamento y mantener cantidades y precios diferentes. Al entrar desde otra PC con las mismas credenciales se recuperan los datos de esa cuenta. Los usuarios anteriores conservan su contraseña y sus registros; no necesitan volver a registrarse.
 
 Las contraseñas se guardan con scrypt y sal aleatoria. Las sesiones duran 8 horas, utilizan una cookie HttpOnly y SameSite=Strict, y guardan en SQL únicamente el hash del token. En producción la cookie también usa Secure. No se necesita `SESSION_SECRET` para este esquema de sesiones opacas.
 
 ## Probar que los medicamentos persisten
 
 1. Ejecutar los comandos anteriores y acceder a la aplicación.
-2. Crear el administrador si aún no existe.
+2. Seleccionar Crear cuenta o iniciar sesión con una cuenta existente.
 3. Ir a **Inventario → Nuevo producto** y registrar un medicamento con código único, nombre, presentación, precio y existencias.
 4. Esperar la confirmación **Producto guardado permanentemente en Turso**.
 5. Recargar la página: el medicamento debe seguir en la tabla.
@@ -87,6 +87,8 @@ Los importes se almacenan en céntimos enteros. La unidad de stock corresponde a
 
 - Consultas parametrizadas y restricciones SQL de unicidad, tipos, importes y existencias.
 - Roles: administrador para registrar/editar inventario; administrador o vendedor para consultar y vender.
+- El alcance de cualquier rol es su propia cuenta: la API toma el propietario desde la sesión, nunca desde un campo enviado por el navegador. Las claves foráneas compuestas impiden mezclar productos y detalles de distintas cuentas.
+- Registro con catálogo inicial atómico, confirmación de contraseña y límite temporal de registros por conexión.
 - Validación de origen y contenido JSON para modificar datos.
 - Protección temporal tras cinco intentos fallidos de contraseña.
 - Descuento condicionado a `stock >= cantidad` en una transacción de escritura.
@@ -144,7 +146,9 @@ npm.cmd run test:remote
 npm.cmd run test:public -- https://novasalud.vercel.app
 ```
 
-`npm test` ejecuta **34 pruebas** secuenciales con límite de memoria: SQL en memoria, HTTP, formularios, tema persistente, carga de ejemplos, migraciones, boletas y reglas. No utiliza la base remota ni sus credenciales.
+`npm test` ejecuta **42 pruebas** secuenciales con límite de memoria: aislamiento de cuentas, registro, SQL, HTTP, formularios, tema persistente, carga de ejemplos, migraciones, boletas y reglas. No utiliza la base remota ni sus credenciales.
+
+`npm.cmd run test:accounts -- https://novasalud.vercel.app` comprueba el registro real de dos cuentas temporales, sus catálogos separados, el rechazo de IDs ajenos y la recuperación de datos al iniciar sesión de nuevo. Retira únicamente esas cuentas y sus registros al finalizar.
 
 `test:remote` es una comprobación **explícita contra Turso**. Crea un medicamento y un usuario técnicos temporales, verifica alta/edición, lectura con otro cliente, rollback, stock insuficiente, dos ventas simultáneas e idempotencia. Al finalizar retira exclusivamente los registros de esa ejecución. No borra medicamentos del usuario.
 
@@ -158,11 +162,13 @@ Para usar la CLI sin instalarla globalmente: `npm.cmd run vercel -- login`. Comp
 
 1. Importar el repositorio en Vercel usando la configuración Vite.
 2. Configurar `TURSO_DATABASE_URL` y `TURSO_AUTH_TOKEN` como variables privadas del proyecto.
-3. Ejecutar las migraciones y crear el primer administrador localmente contra esa misma base antes de usar el despliegue.
+3. Ejecutar las migraciones contra esa base y comprobar el registro desde el enlace público.
 4. Build: `npm run build`; salida: `dist`. Las funciones están en `api/`.
 5. Confirmar la conexión en `/api/health`, la recarga de rutas y los flujos de acceso, inventario y ventas.
 
 No se almacena SQLite modificable en Vercel. El proyecto `sevenxfake/novasalud` está publicado y conectado al repositorio de GitHub, rama `main`. Las variables de Turso están configuradas como secretos de Production. Se verificaron los flujos de la API y las rutas directas en el dominio público, sin depender de un servidor local.
+
+La migración 3 conserva una copia SQL del esquema anterior en `_nova_backup_v2_*`, copia sus registros a `productos_cuenta`, `ventas_cuenta` y `detalle_cuenta`, comprueba cantidades y relaciones y retira las tablas operativas antiguas en una transacción. Las funciones antiguas sin filtro fallan de forma cerrada, sin poder consultar los nuevos inventarios. Las copias de respaldo no están expuestas por la API.
 
 `test:public` verifica el despliegue mediante peticiones HTTPS reales. Crea una cuenta y un medicamento técnicos temporales, prueba sesión segura, alta/edición, nuevas lecturas, venta, historial, idempotencia, concurrencia, rutas y salida. Al finalizar retira exclusivamente los registros de esa ejecución y no conserva una cuenta de prueba.
 

@@ -5,10 +5,15 @@ import { createServer } from "vite";
 import { act, createElement } from "react";
 import { createClient } from "@libsql/client";
 import { migrate, health } from "../server/schema.js";
-import { getSnapshot, saveProduct, registerSale } from "../server/store.js";
+import {
+  getSnapshot as scopedSnapshot,
+  saveProduct as scopedSave,
+  registerSale,
+} from "../server/store.js";
 import { publicError } from "../server/errors.js";
 import { demoProducts } from "../src/data/demo.js";
 import { seedPresentation } from "../server/demo-seed.js";
+import { authenticate } from "../server/auth.js";
 
 let dom;
 let server;
@@ -18,6 +23,10 @@ let container;
 let createRoot;
 let database;
 const originalFetch = globalThis.fetch;
+let activeUser;
+const getSnapshot = (db) => scopedSnapshot(db, activeUser?.id ?? "ui-user");
+const saveProduct = (db, input, id) =>
+  scopedSave(db, input, id, activeUser?.id ?? "ui-user");
 const savedGlobals = new Map();
 
 before(async () => {
@@ -53,6 +62,7 @@ before(async () => {
 beforeEach(async () => {
   document.documentElement.setAttribute("data-bs-theme", "light");
   window.localStorage.removeItem("nova-salud-theme");
+  activeUser = { id: "ui-user", username: "equipo-test", role: "admin" };
   database = createClient({ url: "file::memory:" });
   await migrate(database);
   await database.execute({
@@ -67,7 +77,7 @@ beforeEach(async () => {
   });
   await database.batch(
     demoProducts.map((product) => ({
-      sql: "INSERT INTO productos(id,codigo,nombre,categoria,presentacion,precio_centimos,stock,stock_minimo,creado_en,actualizado_en) VALUES (?,?,?,?,?,?,?,?,?,?)",
+      sql: "INSERT INTO productos_cuenta(id,codigo,nombre,categoria,presentacion,precio_centimos,stock,stock_minimo,creado_en,actualizado_en,usuario_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
       args: [
         product.id,
         product.code,
@@ -79,6 +89,7 @@ beforeEach(async () => {
         product.minStock,
         new Date().toISOString(),
         new Date().toISOString(),
+        "ui-user",
       ],
     })),
     "write",
@@ -92,13 +103,23 @@ beforeEach(async () => {
       let result;
       const body = options.body ? JSON.parse(options.body) : null;
       if (url.pathname === "/api/health") result = await health(database);
-      else if (url.pathname === "/api/auth")
+      else if (url.pathname === "/api/auth") {
+        if (options.method === "DELETE") activeUser = null;
+        if (options.method === "POST")
+          activeUser = (
+            await authenticate(
+              database,
+              { headers: {}, socket: { remoteAddress: "127.0.0.1" } },
+              body,
+              true,
+            )
+          ).user;
         result = {
-          user: { id: "ui-user", username: "equipo-test", role: "admin" },
+          user: activeUser,
           needsSetup: false,
           canSetup: false,
         };
-      else if (url.pathname === "/api/state")
+      } else if (url.pathname === "/api/state")
         result = await getSnapshot(database);
       else if (url.pathname === "/api/products")
         result = {
@@ -211,6 +232,47 @@ test("interfaz: navega por las cinco pantallas y encuentra categorías sin tilde
     "analgesicos",
   );
   assert.equal(document.querySelectorAll("tbody tr").length, 2);
+});
+
+test("interfaz: permite registrarse y abre el inventario personal sin datos de la cuenta anterior", async () => {
+  await saveProduct(database, {
+    code: "PRIVADO-1",
+    name: "Producto exclusivo anterior",
+    category: "Analgésicos",
+    presentation: "Caja",
+    price: 100,
+    stock: 3,
+    minStock: 1,
+  });
+  await click('button[aria-label="Cerrar sesión"]');
+  const register = [...document.querySelectorAll("button")].find(
+    (button) => button.textContent === "Crear cuenta",
+  );
+  await click(register);
+  await fill("#login-user", "alumna-nueva");
+  await fill("#login-password", "clave-nueva-de-prueba-2026");
+  await fill("#register-confirmation", "diferente-de-prueba-2026");
+  await submit("main form:not(.global-search)");
+  assert.match(get('form [role="alert"]').textContent, /no coinciden/);
+  await fill("#register-confirmation", "clave-nueva-de-prueba-2026");
+  await submit("main form:not(.global-search)");
+  for (
+    let attempt = 0;
+    attempt < 100 &&
+    !document.querySelector("h1")?.textContent.includes("Todo listo");
+    attempt++
+  ) {
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    });
+  }
+  assert.match(get("h1").textContent, /Todo listo/);
+  await click('.sidebar nav a[href="/inventario"]');
+  assert.equal(document.querySelectorAll("tbody tr").length, 10);
+  assert.doesNotMatch(get("tbody").textContent, /Producto exclusivo anterior/);
+  assert.ok(
+    (await getSnapshot(database)).products.every((product) => product.demo),
+  );
 });
 
 test("interfaz: el tema nocturno de Bootstrap permanece al navegar y volver a montar la aplicación", async () => {
@@ -372,7 +434,7 @@ test("interfaz: abre una boleta de demostración y prepara su impresión sin ocu
   });
   await click('.sidebar nav a[href="/historial"]');
   const receipt = [...document.querySelectorAll("button.sale-id")].find(
-    (button) => button.textContent === "DEMO-B001-000001",
+    (button) => button.textContent.startsWith("DEMO-B001-000001"),
   );
   assert.ok(receipt);
   await click(receipt);

@@ -2,12 +2,19 @@ import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { createClient } from "@libsql/client";
 import { migrate, health } from "../server/schema.js";
-import { getSnapshot, saveProduct, registerSale } from "../server/store.js";
+import {
+  getSnapshot as scopedSnapshot,
+  saveProduct as scopedSave,
+  registerSale,
+} from "../server/store.js";
 import { seedPresentation } from "../server/demo-seed.js";
 import { randomUUID } from "node:crypto";
 
 let db;
 const userId = "seed-owner";
+const getSnapshot = (database) => scopedSnapshot(database, userId);
+const saveProduct = (database, input, id = null) =>
+  scopedSave(database, input, id, userId);
 const original = {
   code: "MED-001",
   name: "Paracetamol 500 mg",
@@ -123,30 +130,147 @@ test("demostración: vender un producto de ejemplo marca también la venta como 
   );
 });
 
-test("migración: un esquema anterior conserva medicamentos, stock y usuarios al añadir las marcas demo", async () => {
-  const saved = await saveProduct(db, original);
+test("migración: conserva inventario e historial V2 y retira las tablas sin aislamiento", async () => {
+  db.close();
+  db = createClient({ url: "file::memory:" });
+  await migrate(db, { legacyOnly: true });
+  const now = new Date().toISOString();
   await db.batch(
     [
-      "ALTER TABLE productos DROP COLUMN es_demo",
-      "ALTER TABLE ventas DROP COLUMN es_demo",
-      "DELETE FROM schema_migrations WHERE version=2",
+      {
+        sql: "INSERT INTO usuarios(id,usuario,password_hash,rol,creado_en) VALUES (?,?,?,?,?)",
+        args: [userId, "propietario-test", "hash-prueba", "admin", now],
+      },
+      {
+        sql: "INSERT INTO productos(id,codigo,nombre,categoria,presentacion,precio_centimos,stock,stock_minimo,creado_en,actualizado_en) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        args: [
+          "legacy-product",
+          original.code,
+          original.name,
+          original.category,
+          original.presentation,
+          original.price,
+          10,
+          5,
+          now,
+          now,
+        ],
+      },
+      {
+        sql: "INSERT INTO ventas(id,usuario_id,fecha,total_centimos,medio_pago,clave_idempotencia,solicitud_hash) VALUES (?,?,?,?,?,?,?)",
+        args: [
+          "legacy-sale",
+          userId,
+          now,
+          3000,
+          "Efectivo",
+          randomUUID(),
+          "hash",
+        ],
+      },
+      {
+        sql: "INSERT INTO detalle_ventas(id,venta_id,producto_id,codigo_historico,nombre_historico,cantidad,precio_unitario_centimos,subtotal_centimos) VALUES (?,?,?,?,?,?,?,?)",
+        args: [
+          "legacy-detail",
+          "legacy-sale",
+          "legacy-product",
+          original.code,
+          original.name,
+          2,
+          1500,
+          3000,
+        ],
+      },
     ],
     "write",
   );
   assert.equal((await health(db)).schemaReady, false);
   await migrate(db);
   await migrate(db);
-  assert.equal((await health(db)).schemaReady, true);
   const snapshot = await getSnapshot(db);
   assert.equal(snapshot.products.length, 1);
-  assert.equal(snapshot.products[0].id, saved.id);
+  assert.equal(snapshot.products[0].id, "legacy-product");
   assert.equal(snapshot.products[0].stock, 10);
-  assert.equal(snapshot.products[0].demo, false);
+  assert.equal(snapshot.sales[0].id, "legacy-sale");
+  assert.equal(snapshot.sales[0].items[0].subtotal, 3000);
+  assert.equal((await db.execute("PRAGMA foreign_key_check")).rows.length, 0);
   assert.equal(
     Number(
-      (await db.execute("SELECT COUNT(*) AS total FROM usuarios")).rows[0]
-        .total,
+      (await db.execute("SELECT COUNT(*) AS n FROM _nova_backup_v2_productos"))
+        .rows[0].n,
     ),
     1,
   );
+  await assert.rejects(db.execute("SELECT * FROM productos"));
+});
+
+test("migración: separa un catálogo antiguo compartido y conserva cada venta con su propietario", async () => {
+  db.close();
+  db = createClient({ url: "file::memory:" });
+  await migrate(db, { legacyOnly: true });
+  const now = new Date().toISOString();
+  await db.batch(
+    [
+      {
+        sql: "INSERT INTO usuarios(id,usuario,password_hash,rol,creado_en) VALUES (?,?,?,?,?)",
+        args: [userId, "dueno-original", "hash", "admin", now],
+      },
+      {
+        sql: "INSERT INTO usuarios(id,usuario,password_hash,rol,creado_en) VALUES (?,?,?,?,?)",
+        args: ["otro-usuario", "otro-dueno", "hash", "admin", new Date(Date.parse(now)+1000).toISOString()],
+      },
+      {
+        sql: "INSERT INTO productos(id,codigo,nombre,categoria,presentacion,precio_centimos,stock,stock_minimo,creado_en,actualizado_en) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        args: [
+          "compartido",
+          original.code,
+          original.name,
+          original.category,
+          original.presentation,
+          1500,
+          10,
+          5,
+          now,
+          now,
+        ],
+      },
+      {
+        sql: "INSERT INTO ventas(id,usuario_id,fecha,total_centimos,medio_pago,clave_idempotencia,solicitud_hash) VALUES (?,?,?,?,?,?,?)",
+        args: [
+          "venta-otro",
+          "otro-usuario",
+          now,
+          1500,
+          "Efectivo",
+          randomUUID(),
+          "hash",
+        ],
+      },
+      {
+        sql: "INSERT INTO detalle_ventas(id,venta_id,producto_id,codigo_historico,nombre_historico,cantidad,precio_unitario_centimos,subtotal_centimos) VALUES (?,?,?,?,?,?,?,?)",
+        args: [
+          "detalle-otro",
+          "venta-otro",
+          "compartido",
+          original.code,
+          original.name,
+          1,
+          1500,
+          1500,
+        ],
+      },
+    ],
+    "write",
+  );
+  await migrate(db);
+  const first = await scopedSnapshot(db, userId),
+    second = await scopedSnapshot(db, "otro-usuario");
+  assert.equal(first.products.length, 1);
+  assert.equal(second.products.length, 1);
+  assert.equal(first.products[0].id, "compartido");
+  assert.notEqual(second.products[0].id, "compartido");
+  assert.equal(first.sales.length, 0);
+  assert.equal(second.sales[0].id, "venta-otro");
+  assert.equal(second.sales[0].items[0].productId, second.products[0].id);
+  assert.equal((await db.execute("PRAGMA foreign_key_check")).rows.length, 0);
 });

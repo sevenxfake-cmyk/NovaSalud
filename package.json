@@ -11,6 +11,7 @@
     "db:seed-demo": "node --use-system-ca scripts/seed-demo.js",
     "test:remote": "node --use-system-ca scripts/verify-turso.js",
     "test:public": "node --use-system-ca scripts/verify-public.js",
+    "test:accounts": "node --use-system-ca scripts/verify-accounts.js",
     "check:private": "node --use-system-ca scripts/check-private.js",
     "build": "vite build",
     "lint": "eslint .",

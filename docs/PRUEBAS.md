@@ -14,18 +14,19 @@ npm.cmd run test:public -- https://novasalud.vercel.app
 npm.cmd run dev
 ```
 
-## Pruebas automáticas locales: 34 casos
+## Pruebas automáticas locales: 42 casos
 
 Los archivos se ejecutan uno por uno, con 256 MB de heap y 20 segundos por prueba. Estas pruebas no conectan con la base remota.
 
 - 12 pruebas de SQL/HTTP y seguridad: migraciones repetibles, restricciones y relaciones, edición por versión, transacciones, rollback después de descontar stock, idempotencia, concurrencia, sesiones, roles, alta inicial solo local, bloqueo temporal y mensajes sin datos privados.
-- 8 pruebas de interfaz: navegación y búsqueda, registro/duplicados y foco, venta e historial, reposición, errores del servidor, conexión verificada, boleta imprimible y modo nocturno persistente al navegar y volver a montar la aplicación.
-- 4 pruebas de carga/migración: alta de nueve productos y seis boletas, repetición sin duplicados ni restablecimiento de stock, propagación de la marca de demostración a nuevas ventas y conservación de registros al actualizar un esquema anterior.
+- 9 pruebas de interfaz, incluido el registro público y la eliminación del estado de la cuenta anterior al cambiar de usuario.
+- 5 pruebas de carga/migración, incluida la conservación de un esquema compartido antiguo con varios usuarios e historial separado por propietario.
+- 6 pruebas de cuentas: catálogos independientes, códigos iguales por usuario, rechazo de IDs ajenos y propietario falsificado, claves foráneas compuestas, idempotencia por cuenta, nuevo acceso y rollback del registro.
 - 10 pruebas de reglas y formatos: validación de precios/cantidades/códigos, importes, alertas y fechas de Lima.
 
 Las pruebas utilizan SQL en memoria y sesiones de prueba. Los ejemplos de la presentación se cargan separadamente con `db:seed-demo`; no se insertan al iniciar React ni al ejecutar `npm test`.
 
-La verificación del modo nocturno completó las 8 pruebas de interfaz. La preferencia se guarda únicamente en localStorage; no se guardan allí medicamentos, ventas ni credenciales. Los otros 26 casos corresponden al backend y las reglas ya verificados, sin cambios en esta actualización.
+El modo nocturno guarda únicamente su preferencia en localStorage; medicamentos, ventas y credenciales no se guardan allí. La sesión determina el propietario de los datos en cada consulta del servidor.
 
 ## Carga persistente de la presentación
 
@@ -55,7 +56,7 @@ La ejecución final pasó íntegramente. Esto no implica que la red nunca pueda 
 
 Crear un medicamento en Inventario, esperar la confirmación, recargar y comprobar que sigue presente. Editarlo, guardar, reiniciar Vite e iniciar sesión: la edición debe conservarse.
 
-La primera vez se crea el administrador desde el acceso local. El usuario queda en Turso; no se generan credenciales predeterminadas.
+Seleccionar Crear cuenta desde el enlace público. La cuenta se guarda en Turso junto con diez productos propios de demostración y ninguna venta ajena. Volver a entrar recupera ese mismo inventario.
 
 ## Credenciales
 

@@ -1,5 +1,13 @@
 # Historial de cambios · NOVA SALUD
 
+## Registro e inventarios individuales · 27 de octubre de 2026
+
+- Registro público con usuario, contraseña confirmada y diez productos de demostración propios, creados en una transacción.
+- Productos, existencias, alertas, ventas, detalles y claves idempotentes separados por usuario autenticado.
+- Validaciones de propietario en la API y claves foráneas compuestas para impedir referencias cruzadas.
+- Migración con respaldo SQL de los registros existentes y retirada de las tablas antiguas sin aislamiento.
+- Pruebas de dos cuentas independientes, recuperación del inventario al volver a entrar y conservación del historial anterior.
+
 ## Modo nocturno · 27 de octubre de 2026
 
 - Botón Bootstrap de luna/sol en la barra superior, accesible con teclado y disponible también en móviles.

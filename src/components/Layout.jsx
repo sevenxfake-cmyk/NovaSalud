@@ -78,7 +78,7 @@ export default function Layout() {
           </span>
           <div>
             <strong>Botica Nova Salud</strong>
-            <small>Sede principal · Perú</small>
+            <small>Inventario personal · Perú</small>
           </div>
           <Icon name="chevron-expand" />
         </div>

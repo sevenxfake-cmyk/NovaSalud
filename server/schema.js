@@ -1,6 +1,7 @@
 import { inTransaction } from "./db.js";
+import { migrateAccounts } from "./account-schema.js";
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 const statements = [
   `CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)`,
@@ -59,7 +60,17 @@ const statements = [
   `CREATE INDEX IF NOT EXISTS idx_sesiones_expira ON sesiones(expira_en)`,
 ];
 
-export async function migrate(db) {
+export async function migrate(db, { legacyOnly = false } = {}) {
+  const exists = await db.execute(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name='schema_migrations'",
+  );
+  if (exists.rows.length) {
+    const current = await db.execute({
+      sql: "SELECT version FROM schema_migrations WHERE version=?",
+      args: [SCHEMA_VERSION],
+    });
+    if (current.rows.length) return;
+  }
   await db.batch(
     [
       ...statements,
@@ -93,6 +104,7 @@ export async function migrate(db) {
       args: [2, new Date().toISOString()],
     });
   });
+  if (!legacyOnly) await migrateAccounts(db);
 }
 
 export async function health(db) {

@@ -31,14 +31,32 @@ const saleFromRow = (row, details) => ({
   })),
 });
 
-export async function getSnapshot(db) {
+function requireOwner(userId) {
+  if (typeof userId !== "string" || !userId || userId.length > 64)
+    throw new AppError(
+      403,
+      "No se pudo identificar el inventario de tu cuenta.",
+    );
+}
+
+export async function getSnapshot(db, userId) {
+  requireOwner(userId);
   return inTransaction(
     db,
     async (tx) => {
       const results = await tx.batch([
-        "SELECT * FROM productos ORDER BY nombre COLLATE NOCASE",
-        "SELECT * FROM ventas ORDER BY fecha DESC, id DESC",
-        "SELECT * FROM detalle_ventas",
+        {
+          sql: "SELECT * FROM productos_cuenta WHERE usuario_id=? ORDER BY nombre COLLATE NOCASE",
+          args: [userId],
+        },
+        {
+          sql: "SELECT * FROM ventas_cuenta WHERE usuario_id=? ORDER BY fecha DESC,id DESC",
+          args: [userId],
+        },
+        {
+          sql: "SELECT * FROM detalle_cuenta WHERE usuario_id=?",
+          args: [userId],
+        },
       ]);
       return {
         products: results[0].rows.map(productFromRow),
@@ -54,7 +72,8 @@ export async function getSnapshot(db) {
   );
 }
 
-export async function saveProduct(db, input, id = null) {
+export async function saveProduct(db, input, id = null, userId) {
+  requireOwner(userId);
   if (!input || typeof input !== "object" || Array.isArray(input))
     throw new AppError(400, "El producto no es válido.");
   let product;
@@ -81,8 +100,8 @@ export async function saveProduct(db, input, id = null) {
           "Falta la versión del producto. Actualiza los datos.",
         );
       const result = await tx.execute({
-        sql: "UPDATE productos SET codigo=?, nombre=?, categoria=?, presentacion=?, precio_centimos=?, stock=?, stock_minimo=?, actualizado_en=?, version=version+1 WHERE id=? AND version=?",
-        args: [...fields, now, id, input.version],
+        sql: "UPDATE productos_cuenta SET codigo=?, nombre=?, categoria=?, presentacion=?, precio_centimos=?, stock=?, stock_minimo=?, actualizado_en=?, version=version+1 WHERE id=? AND version=? AND usuario_id=?",
+        args: [...fields, now, id, input.version, userId],
       });
       if (result.rowsAffected !== 1)
         throw new AppError(
@@ -92,15 +111,15 @@ export async function saveProduct(db, input, id = null) {
     } else {
       id = randomUUID();
       await tx.execute({
-        sql: "INSERT INTO productos(codigo,nombre,categoria,presentacion,precio_centimos,stock,stock_minimo,id,creado_en,actualizado_en) VALUES (?,?,?,?,?,?,?,?,?,?)",
-        args: [...fields, id, now, now],
+        sql: "INSERT INTO productos_cuenta(codigo,nombre,categoria,presentacion,precio_centimos,stock,stock_minimo,id,creado_en,actualizado_en,usuario_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        args: [...fields, id, now, now, userId],
       });
     }
     return productFromRow(
       (
         await tx.execute({
-          sql: "SELECT * FROM productos WHERE id=?",
-          args: [id],
+          sql: "SELECT * FROM productos_cuenta WHERE id=? AND usuario_id=?",
+          args: [id, userId],
         })
       ).rows[0],
     );
@@ -108,6 +127,7 @@ export async function saveProduct(db, input, id = null) {
 }
 
 export async function registerSale(db, input, userId, serverOptions = {}) {
+  requireOwner(userId);
   if (
     !input ||
     !Array.isArray(input.items) ||
@@ -156,8 +176,8 @@ export async function registerSale(db, input, userId, serverOptions = {}) {
     .digest("hex");
   return inTransaction(db, async (tx) => {
     const previous = await tx.execute({
-      sql: "SELECT * FROM ventas WHERE clave_idempotencia=?",
-      args: [input.requestId],
+      sql: "SELECT * FROM ventas_cuenta WHERE clave_idempotencia=? AND usuario_id=?",
+      args: [input.requestId, userId],
     });
     if (previous.rows.length) {
       if (previous.rows[0].solicitud_hash !== requestHash)
@@ -166,15 +186,15 @@ export async function registerSale(db, input, userId, serverOptions = {}) {
         previous.rows[0],
         (
           await tx.execute({
-            sql: "SELECT * FROM detalle_ventas WHERE venta_id=?",
-            args: [previous.rows[0].id],
+            sql: "SELECT * FROM detalle_cuenta WHERE venta_id=? AND usuario_id=?",
+            args: [previous.rows[0].id, userId],
           })
         ).rows,
       );
     }
     const rows = await tx.execute({
-      sql: `SELECT * FROM productos WHERE id IN (${requested.map(() => "?").join(",")})`,
-      args: requested.map((item) => item.productId),
+      sql: `SELECT * FROM productos_cuenta WHERE usuario_id=? AND id IN (${requested.map(() => "?").join(",")})`,
+      args: [userId, ...requested.map((item) => item.productId)],
     });
     const items = requested.map((item) => {
       const row = rows.rows.find((product) => product.id === item.productId);
@@ -210,12 +230,13 @@ export async function registerSale(db, input, userId, serverOptions = {}) {
       );
     const updated = await tx.batch(
       items.map((item) => ({
-        sql: "UPDATE productos SET stock=stock-?, version=version+1, actualizado_en=? WHERE id=? AND stock>=?",
+        sql: "UPDATE productos_cuenta SET stock=stock-?, version=version+1, actualizado_en=? WHERE id=? AND stock>=? AND usuario_id=?",
         args: [
           item.quantity,
           new Date().toISOString(),
           item.productId,
           item.quantity,
+          userId,
         ],
       })),
     );
@@ -233,7 +254,7 @@ export async function registerSale(db, input, userId, serverOptions = {}) {
       demo: serverOptions.demo === true || items.some((item) => item.demo),
     };
     await tx.execute({
-      sql: "INSERT INTO ventas(id,usuario_id,fecha,total_centimos,medio_pago,clave_idempotencia,solicitud_hash,es_demo) VALUES (?,?,?,?,?,?,?,?)",
+      sql: "INSERT INTO ventas_cuenta(id,usuario_id,fecha,total_centimos,medio_pago,clave_idempotencia,solicitud_hash,es_demo) VALUES (?,?,?,?,?,?,?,?)",
       args: [
         sale.id,
         userId,
@@ -247,7 +268,7 @@ export async function registerSale(db, input, userId, serverOptions = {}) {
     });
     await tx.batch(
       items.map((item) => ({
-        sql: "INSERT INTO detalle_ventas(id,venta_id,producto_id,codigo_historico,nombre_historico,cantidad,precio_unitario_centimos,subtotal_centimos) VALUES (?,?,?,?,?,?,?,?)",
+        sql: "INSERT INTO detalle_cuenta(id,venta_id,producto_id,codigo_historico,nombre_historico,cantidad,precio_unitario_centimos,subtotal_centimos,usuario_id) VALUES (?,?,?,?,?,?,?,?,?)",
         args: [
           randomUUID(),
           sale.id,
@@ -257,6 +278,7 @@ export async function registerSale(db, input, userId, serverOptions = {}) {
           item.quantity,
           item.price,
           item.subtotal,
+          userId,
         ],
       })),
     );

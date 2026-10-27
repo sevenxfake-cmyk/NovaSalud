@@ -6,7 +6,7 @@ import {
   inTransaction,
 } from "../server/db.js";
 import { health } from "../server/schema.js";
-import { saveProduct, registerSale } from "../server/store.js";
+import { saveProduct as scopedSave, registerSale } from "../server/store.js";
 import { passwordHash } from "../server/auth.js";
 import { AppError, publicError } from "../server/errors.js";
 
@@ -14,6 +14,7 @@ import { AppError, publicError } from "../server/errors.js";
 // Solo crea y retira registros propios, identificados por UUID y código único.
 const tag = randomUUID();
 const userId = randomUUID();
+const saveProduct = (db, input, id = null) => scopedSave(db, input, id, userId);
 const code = `TEST-${tag.replaceAll("-", "").slice(0, 16)}`.toUpperCase();
 const name = `PRUEBA AUTOMATIZADA ${tag}`;
 let db;
@@ -64,16 +65,14 @@ try {
     Number(
       (
         await db.execute({
-          sql: "SELECT stock FROM productos WHERE id=?",
+          sql: "SELECT stock FROM productos_cuenta WHERE id=?",
           args: [product.id],
         })
       ).rows[0].stock,
     ),
     2,
   );
-  console.log(
-    "Rollback verificado: un fallo posterior al descuento no altera el stock.",
-  );
+  console.log("Acceso ajeno rechazado: el intento no altera el stock.");
 
   step = "edición del medicamento";
   product = await saveProduct(db, { ...product, stock: 1 }, product.id);
@@ -82,7 +81,7 @@ try {
   clients.push(independent);
   const persisted = (
     await independent.execute({
-      sql: "SELECT codigo,stock,version FROM productos WHERE id=?",
+      sql: "SELECT codigo,stock,version FROM productos_cuenta WHERE id=?",
       args: [product.id],
     })
   ).rows[0];
@@ -146,7 +145,7 @@ try {
     Number(
       (
         await db.execute({
-          sql: "SELECT stock FROM productos WHERE id=?",
+          sql: "SELECT stock FROM productos_cuenta WHERE id=?",
           args: [product.id],
         })
       ).rows[0].stock,
@@ -157,7 +156,7 @@ try {
     Number(
       (
         await db.execute({
-          sql: "SELECT COUNT(*) AS total FROM ventas WHERE usuario_id=?",
+          sql: "SELECT COUNT(*) AS total FROM ventas_cuenta WHERE usuario_id=?",
           args: [userId],
         })
       ).rows[0].total,
@@ -184,15 +183,15 @@ try {
     try {
       await inTransaction(db, async (tx) => {
         await tx.execute({
-          sql: "DELETE FROM detalle_ventas WHERE venta_id IN (SELECT id FROM ventas WHERE usuario_id=?)",
+          sql: "DELETE FROM detalle_cuenta WHERE venta_id IN (SELECT id FROM ventas_cuenta WHERE usuario_id=?)",
           args: [userId],
         });
         await tx.execute({
-          sql: "DELETE FROM ventas WHERE usuario_id=?",
+          sql: "DELETE FROM ventas_cuenta WHERE usuario_id=?",
           args: [userId],
         });
         await tx.execute({
-          sql: "DELETE FROM productos WHERE codigo=? AND nombre=?",
+          sql: "DELETE FROM productos_cuenta WHERE codigo=? AND nombre=?",
           args: [code, name],
         });
         await tx.execute({

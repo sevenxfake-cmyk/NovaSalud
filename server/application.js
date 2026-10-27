@@ -37,20 +37,32 @@ export function createApplication({
         res.setHeader("Set-Cookie", sessionCookie("", production, 0));
         return json(res, 200, { user: null });
       }
-      const result = await authenticate(db, req, await readJson(req), setup);
+      const result = await authenticate(
+        db,
+        req,
+        await readJson(req),
+        setup,
+        production,
+      );
       res.setHeader("Set-Cookie", sessionCookie(result.token, production));
       json(res, 200, { user: result.user });
     }),
     state: endpoint(["GET"], async (req, res) => {
       const db = database();
-      await requireUser(db, req);
-      json(res, 200, await getSnapshot(db));
+      const user = await requireUser(db, req);
+      json(res, 200, await getSnapshot(db, user.id));
     }),
     products: endpoint(["GET", "POST", "PATCH"], async (req, res) => {
       const db = database();
-      await requireUser(db, req, req.method === "GET" ? undefined : "admin");
+      const user = await requireUser(
+        db,
+        req,
+        req.method === "GET" ? undefined : "admin",
+      );
       if (req.method === "GET")
-        return json(res, 200, { products: (await getSnapshot(db)).products });
+        return json(res, 200, {
+          products: (await getSnapshot(db, user.id)).products,
+        });
       const id = new URL(req.url, "http://localhost").searchParams.get("id");
       if (req.method === "PATCH" && (!id || id.length > 64))
         throw new AppError(400, "Selecciona un producto válido.");
@@ -58,6 +70,7 @@ export function createApplication({
         db,
         await readJson(req),
         req.method === "PATCH" ? id : null,
+        user.id,
       );
       json(res, req.method === "POST" ? 201 : 200, { product });
     }),
@@ -65,7 +78,9 @@ export function createApplication({
       const db = database();
       const user = await requireUser(db, req);
       if (req.method === "GET")
-        return json(res, 200, { sales: (await getSnapshot(db)).sales });
+        return json(res, 200, {
+          sales: (await getSnapshot(db, user.id)).sales,
+        });
       const sale = await registerSale(db, await readJson(req), user.id);
       json(res, 201, { sale });
     }),
