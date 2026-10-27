@@ -137,6 +137,11 @@ export default function Inventory() {
                         <ProductAvatar product={product} />
                         <div>
                           <strong>{product.name}</strong>
+                          {product.demo && (
+                            <span className="badge text-bg-light border ms-2">
+                              Demo
+                            </span>
+                          )}
                           <small>
                             {product.code} <span>·</span> {product.presentation}
                           </small>

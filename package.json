@@ -8,6 +8,7 @@
     "dev": "node --use-system-ca node_modules/vite/bin/vite.js",
     "db:migrate": "node --use-system-ca scripts/database.js migrate",
     "db:check": "node --use-system-ca scripts/database.js check",
+    "db:seed-demo": "node --use-system-ca scripts/seed-demo.js",
     "test:remote": "node --use-system-ca scripts/verify-turso.js",
     "test:public": "node --use-system-ca scripts/verify-public.js",
     "check:private": "node --use-system-ca scripts/check-private.js",

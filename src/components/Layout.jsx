@@ -198,7 +198,9 @@ export default function Layout() {
               <strong>Inventario persistente</strong>
               <span className="demo-explanation">
                 {" "}
-                · Los registros se almacenan en la base de datos de la botica.
+                · Los registros se almacenan en la base de datos de la botica.{" "}
+                {products.some((product) => product.demo) &&
+                  "Incluye ejemplos académicos."}
               </span>
             </span>
             <span

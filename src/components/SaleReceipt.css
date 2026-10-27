@@ -1,0 +1,90 @@
+.receipt-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px dashed #d9e2ef;
+}
+.receipt-heading h3 {
+  font-size: 18px;
+  letter-spacing: 0.5px;
+  margin: 0 0 4px;
+  font-weight: 650;
+}
+.receipt-heading p {
+  margin: 0;
+  color: #8697af;
+  font-size: 10px;
+}
+.receipt-heading > div > strong {
+  display: block;
+  font-size: 11px;
+  color: #567495;
+}
+.receipt-heading small {
+  display: block;
+  font-size: 11px;
+  margin-top: 7px;
+  color: #7e91ab;
+  overflow-wrap: anywhere;
+}
+.receipt-footer {
+  font-size: 10px;
+  text-align: center;
+  line-height: 1.8;
+  color: #8b9db5;
+  margin: 15px 0 0;
+  padding-top: 16px;
+  border-top: 1px dashed #d9e2ef;
+}
+@media print {
+  body.receipt-print #root {
+    display: none !important;
+  }
+  body.receipt-print {
+    background: white !important;
+    overflow: visible !important;
+  }
+  body.receipt-print .modal-surface {
+    position: static !important;
+    overflow: visible !important;
+    background: white !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+  }
+  body.receipt-print .modal-dialog {
+    width: 100%;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  body.receipt-print .modal-content {
+    box-shadow: none;
+    border: 0;
+  }
+  body.receipt-print .modal-header,
+  body.receipt-print .modal-actions {
+    display: none !important;
+  }
+  body.receipt-print .modal-body {
+    padding: 10px;
+  }
+  body.receipt-print .sale-receipt {
+    color: #111 !important;
+    print-color-adjust: exact;
+  }
+  body.receipt-print .table-responsive {
+    overflow: visible;
+  }
+  body.receipt-print .table {
+    font-size: 10pt;
+  }
+  body.receipt-print .table thead th {
+    font-size: 9pt;
+  }
+  body.receipt-print .receipt-footer {
+    color: #555;
+  }
+}

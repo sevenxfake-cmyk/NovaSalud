@@ -58,7 +58,15 @@ Las contraseñas se guardan con scrypt y sal aleatoria. Las sesiones duran 8 hor
 6. Editar el stock o precio, guardar y recargar otra vez.
 7. Detener Vite con Ctrl+C, ejecutar de nuevo `npm.cmd run dev` e iniciar sesión si fuera necesario: el registro debe conservarse.
 
-La base de datos empieza vacía: las migraciones **no insertan medicamentos ni ventas de demostración**. El frontend tampoco recurre a datos ficticios si falla la API; muestra el error.
+Las migraciones **no insertan medicamentos ni ventas de demostración**. Para la presentación se cargaron explícitamente 9 productos y 6 boletas de ejemplo en Turso, conservando el producto que ya había registrado el propietario. Los ejemplos llevan la marca Demo y permanecen al recargar. El frontend no inventa registros si falla la API; muestra el error.
+
+Para reproducir esta carga de forma explícita:
+
+```powershell
+npm.cmd run db:seed-demo
+```
+
+El comando no duplica las boletas ni restablece el stock al repetirlo. Los detalles y la lista de ejemplos están en [DATOS_DEMO.md](docs/DATOS_DEMO.md). Las boletas se pueden abrir desde Historial y usar **Imprimir boleta**. Son documentos académicos sin validez fiscal.
 
 **Turso conectado** se muestra únicamente después de que `/api/health` complete una consulta real a la base de datos. Tener variables de entorno configuradas no basta para mostrar ese estado.
 
@@ -115,7 +123,7 @@ src/components/  Componentes y formularios existentes; acceso y conexión
 src/context/     Carga y operaciones asíncronas mediante API
 src/lib/         Cliente HTTP público, formatos y validaciones
 src/pages/       Cinco pantallas existentes
-src/data/        Fixtures para pruebas; no se cargan en la aplicación real
+src/data/        Fixtures para pruebas y carga explícita del catálogo académico
 tests/           Pruebas SQL, HTTP, interfaz y reglas
 docs/            Documentación SENATI y verificaciones
 vercel.json      Build y rutas frontend sin interceptar /api
@@ -134,7 +142,7 @@ npm.cmd run test:remote
 npm.cmd run test:public -- https://novasalud.vercel.app
 ```
 
-`npm test` ejecuta **28 pruebas** secuenciales con límite de memoria: SQL en memoria, HTTP, formularios y reglas. No utiliza la base remota ni sus credenciales.
+`npm test` ejecuta **33 pruebas** secuenciales con límite de memoria: SQL en memoria, HTTP, formularios, carga de ejemplos, migraciones, boletas y reglas. No utiliza la base remota ni sus credenciales.
 
 `test:remote` es una comprobación **explícita contra Turso**. Crea un medicamento y un usuario técnicos temporales, verifica alta/edición, lectura con otro cliente, rollback, stock insuficiente, dos ventas simultáneas e idempotencia. Al finalizar retira exclusivamente los registros de esa ejecución. No borra medicamentos del usuario.
 

@@ -1,4 +1,6 @@
-export const SCHEMA_VERSION = 1;
+import { inTransaction } from "./db.js";
+
+export const SCHEMA_VERSION = 2;
 
 const statements = [
   `CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)`,
@@ -63,11 +65,34 @@ export async function migrate(db) {
       ...statements,
       {
         sql: "INSERT OR IGNORE INTO schema_migrations(version, applied_at) VALUES (?, ?)",
-        args: [SCHEMA_VERSION, new Date().toISOString()],
+        args: [1, new Date().toISOString()],
       },
     ],
     "write",
   );
+  await inTransaction(db, async (tx) => {
+    const applied = await tx.execute({
+      sql: "SELECT version FROM schema_migrations WHERE version=?",
+      args: [2],
+    });
+    if (applied.rows.length) return;
+    const columns = await tx.batch([
+      "PRAGMA table_info(productos)",
+      "PRAGMA table_info(ventas)",
+    ]);
+    if (!columns[0].rows.some((column) => column.name === "es_demo"))
+      await tx.execute(
+        "ALTER TABLE productos ADD COLUMN es_demo INTEGER NOT NULL DEFAULT 0 CHECK(es_demo IN (0,1))",
+      );
+    if (!columns[1].rows.some((column) => column.name === "es_demo"))
+      await tx.execute(
+        "ALTER TABLE ventas ADD COLUMN es_demo INTEGER NOT NULL DEFAULT 0 CHECK(es_demo IN (0,1))",
+      );
+    await tx.execute({
+      sql: "INSERT INTO schema_migrations(version,applied_at) VALUES (?,?)",
+      args: [2, new Date().toISOString()],
+    });
+  });
 }
 
 export async function health(db) {

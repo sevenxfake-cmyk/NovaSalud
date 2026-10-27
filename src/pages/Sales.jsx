@@ -97,7 +97,12 @@ export default function Sales() {
                       <StockBadge product={product} />
                     </div>
                     <span className="product-code">{product.code}</span>
-                    <h3>{product.name}</h3>
+                    <h3>
+                      {product.name}{" "}
+                      {product.demo && (
+                        <span className="badge text-bg-light border">Demo</span>
+                      )}
+                    </h3>
                     <p>{product.presentation}</p>
                     <div className="catalog-stock">
                       {product.stock} unidades disponibles

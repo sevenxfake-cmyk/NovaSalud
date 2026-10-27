@@ -77,6 +77,7 @@ erDiagram
     integer stock
     integer stock_minimo
     integer version
+    integer es_demo
     text creado_en
     text actualizado_en
   }
@@ -88,6 +89,7 @@ erDiagram
     text medio_pago
     text clave_idempotencia UK
     text solicitud_hash
+    integer es_demo
   }
   detalle_ventas {
     text id PK
@@ -102,6 +104,8 @@ erDiagram
 ```
 
 También existen schema_migrations e intentos_login. El esquema está en server/schema.js y se aplica con npm run db:migrate. La migración es repetible y no inserta datos de demostración.
+
+La versión 2 añade marcas persistentes `es_demo` sin eliminar medicamentos, usuarios ni ventas existentes. La carga académica se ejecuta explícitamente con `npm run db:seed-demo`, reserva códigos DEMO y números de boleta estables, conserva el stock de los registros del usuario y no duplica ni repone los ejemplos al repetirse. Las seis boletas se generan con el mismo servicio transaccional y descuentan el stock de sus productos de demostración.
 
 Las restricciones incluyen claves foráneas, códigos únicos sin distinguir mayúsculas, roles válidos, precios positivos, stock no negativo, cantidades enteras positivas y unicidad de producto por venta. Los detalles preservan código, nombre y precio históricos. Las transacciones verifican que las claves foráneas estén activadas.
 
@@ -158,7 +162,7 @@ Las variables privadas se cargan desde .env.local localmente o desde Vercel en p
 
 ## 10. Instalación, uso y pruebas
 
-Consultar [README](../README.md) para los comandos exactos, primer acceso, prueba de persistencia y configuración de Vercel. Consultar [PRUEBAS](PRUEBAS.md) para las 28 pruebas locales y la verificación remota.
+Consultar [README](../README.md) para los comandos exactos, primer acceso, prueba de persistencia y configuración de Vercel. Consultar [PRUEBAS](PRUEBAS.md) para las 33 pruebas locales y la verificación remota. Las boletas internas son imprimibles y las de ejemplo muestran de forma destacada que no tienen validez fiscal.
 
 La base remota no se sustituye por SQLite dentro de Vercel Functions. Se comprobó persistencia con un cliente independiente, rollback, rechazo por stock insuficiente, concurrencia e idempotencia. Los registros técnicos de la prueba se retiraron al terminar.
 

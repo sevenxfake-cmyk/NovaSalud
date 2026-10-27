@@ -13,13 +13,14 @@ export const productFromRow = (row) => ({
   stock: Number(row.stock),
   minStock: Number(row.stock_minimo),
   version: Number(row.version),
+  demo: Number(row.es_demo ?? 0) === 1,
 });
 const saleFromRow = (row, details) => ({
   id: row.id,
   date: row.fecha,
   total: Number(row.total_centimos),
   payment: row.medio_pago,
-  demo: false,
+  demo: Number(row.es_demo ?? 0) === 1,
   items: details.map((item) => ({
     productId: item.producto_id,
     code: item.codigo_historico,
@@ -106,7 +107,7 @@ export async function saveProduct(db, input, id = null) {
   });
 }
 
-export async function registerSale(db, input, userId) {
+export async function registerSale(db, input, userId, serverOptions = {}) {
   if (
     !input ||
     !Array.isArray(input.items) ||
@@ -193,6 +194,7 @@ export async function registerSale(db, input, userId) {
         code: row.codigo,
         name: row.nombre,
         subtotal: Number(row.precio_centimos) * item.quantity,
+        demo: Number(row.es_demo ?? 0) === 1,
       };
     });
     const total = items.reduce((sum, item) => sum + item.subtotal, 0);
@@ -223,15 +225,15 @@ export async function registerSale(db, input, userId) {
         "Las existencias cambiaron. Actualiza el inventario.",
       );
     const sale = {
-      id: `V-${randomUUID()}`,
-      date: new Date().toISOString(),
+      id: serverOptions.id ?? `V-${randomUUID()}`,
+      date: serverOptions.date ?? new Date().toISOString(),
       total,
       payment: input.payment,
       items,
-      demo: false,
+      demo: serverOptions.demo === true || items.some((item) => item.demo),
     };
     await tx.execute({
-      sql: "INSERT INTO ventas(id,usuario_id,fecha,total_centimos,medio_pago,clave_idempotencia,solicitud_hash) VALUES (?,?,?,?,?,?,?)",
+      sql: "INSERT INTO ventas(id,usuario_id,fecha,total_centimos,medio_pago,clave_idempotencia,solicitud_hash,es_demo) VALUES (?,?,?,?,?,?,?,?)",
       args: [
         sale.id,
         userId,
@@ -240,6 +242,7 @@ export async function registerSale(db, input, userId) {
         input.payment,
         input.requestId,
         requestHash,
+        sale.demo ? 1 : 0,
       ],
     });
     await tx.batch(

@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { usePharmacy } from "../context/pharmacy";
 import { dateLabel, dayKey, money, normalize, timeLabel } from "../lib/format";
 import { EmptyState, Icon, Modal, PageHeading } from "../components/UI";
+import SaleReceipt from "../components/SaleReceipt";
 
 export default function History() {
   const { sales } = usePharmacy();
@@ -153,6 +154,11 @@ export default function History() {
                       >
                         {sale.id}
                       </button>
+                      {sale.demo && (
+                        <span className="badge text-bg-warning d-block mt-1">
+                          Demostración
+                        </span>
+                      )}
                     </td>
                     <td>
                       <div className="date-cell">
@@ -240,61 +246,12 @@ export default function History() {
       </section>
       {selected && (
         <Modal
-          title="Detalle de venta"
+          title={selected.demo ? "Boleta de demostración" : "Detalle de venta"}
           subtitle={`${selected.id} · ${dateLabel(selected.date)} · ${timeLabel(selected.date)}`}
           onClose={close}
           wide
         >
-          <div className="receipt-meta">
-            <span className="status-badge ok">
-              <Icon name="check-circle" /> Completada
-            </span>
-            <span>
-              Pago: <strong>{selected.payment}</strong>
-            </span>
-          </div>
-          <div className="table-responsive">
-            <table className="table align-middle">
-              <thead>
-                <tr>
-                  <th>Producto</th>
-                  <th>Cantidad</th>
-                  <th>Precio</th>
-                  <th className="text-end">Subtotal</th>
-                </tr>
-              </thead>
-              <tbody>
-                {selected.items.map((item) => (
-                  <tr key={item.productId}>
-                    <td>
-                      <strong>{item.name}</strong>
-                      <small className="d-block text-secondary">
-                        {item.code}
-                      </small>
-                    </td>
-                    <td>{item.quantity}</td>
-                    <td className="text-nowrap">{money(item.price)}</td>
-                    <td className="text-end text-nowrap">
-                      {money(item.subtotal)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="receipt-total">
-            <span>Total de la venta</span>
-            <strong>{money(selected.total)}</strong>
-          </div>
-          <div className="form-info">
-            <Icon name="info-circle" /> Registro interno de la botica. No es un
-            comprobante fiscal.
-          </div>
-          <div className="modal-actions">
-            <button className="btn btn-primary" onClick={close}>
-              Cerrar detalle
-            </button>
-          </div>
+          <SaleReceipt sale={selected} onClose={close} />
         </Modal>
       )}
     </>

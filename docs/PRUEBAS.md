@@ -14,15 +14,22 @@ npm.cmd run test:public -- https://novasalud.vercel.app
 npm.cmd run dev
 ```
 
-## Pruebas automáticas locales: 28 aprobadas
+## Pruebas automáticas locales: 33 aprobadas
 
 Los archivos se ejecutan uno por uno, con 256 MB de heap y 20 segundos por prueba. Estas pruebas no conectan con la base remota.
 
 - 12 pruebas de SQL/HTTP y seguridad: migraciones repetibles, restricciones y relaciones, edición por versión, transacciones, rollback después de descontar stock, idempotencia, concurrencia, sesiones, roles, alta inicial solo local, bloqueo temporal y mensajes sin datos privados.
-- 6 pruebas de interfaz: navegación y búsqueda, registro/duplicados y foco, venta e historial, reposición, formulario conservado ante error del servidor y ausencia de Turso conectado si falla la consulta.
+- 7 pruebas de interfaz: navegación y búsqueda, registro/duplicados y foco, venta e historial, reposición, errores del servidor, conexión verificada y boleta de demostración con preparación de impresión.
+- 4 pruebas de carga/migración: alta de nueve productos y seis boletas, repetición sin duplicados ni restablecimiento de stock, propagación de la marca de demostración a nuevas ventas y conservación de registros al actualizar un esquema anterior.
 - 10 pruebas de reglas y formatos: validación de precios/cantidades/códigos, importes, alertas y fechas de Lima.
 
-Las pruebas de interfaz utilizan medicamentos ficticios en SQL en memoria y una sesión simulada. La aplicación real no carga esos datos.
+Las pruebas utilizan SQL en memoria y sesiones de prueba. Los ejemplos de la presentación se cargan separadamente con `db:seed-demo`; no se insertan al iniciar React ni al ejecutar `npm test`.
+
+## Carga persistente de la presentación
+
+Se incorporaron 9 productos de demostración y 6 boletas `DEMO-B001-000001` a `DEMO-B001-000006`. La lectura desde otro cliente de Turso confirmó 10 productos totales, 6 ventas y el producto original MED-001 con sus 10 unidades conservadas. Todos los totales de venta coinciden con sus detalles.
+
+Las boletas de ejemplo descontaron existencias con el servicio transaccional de ventas. Estos registros se conservan para la presentación y no forman parte de la limpieza de los scripts de verificación.
 
 ## Comprobación real en Turso
 

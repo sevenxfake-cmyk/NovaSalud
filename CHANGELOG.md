@@ -1,5 +1,13 @@
 # Historial de cambios · NOVA SALUD
 
+## Catálogo y boletas de presentación · 27 de octubre de 2026
+
+- Carga explícita e idempotente de 9 productos y 6 boletas de demostración en Turso, conservando el medicamento original del propietario.
+- Migración de metadatos de demostración sin borrar datos existentes.
+- Boletas con número, fecha, pago, detalle, total y opción de impresión; ejemplos marcados sin validez fiscal.
+- Descuento transaccional del stock y propagación de la marca Demo al vender productos de ejemplo.
+- 33 pruebas aprobadas, incluidas conservación de datos, repetición de carga y vista imprimible.
+
 ## Publicación en Vercel · 27 de octubre de 2026
 
 - Aplicación publicada en https://novasalud.vercel.app con Vite y Node 24.

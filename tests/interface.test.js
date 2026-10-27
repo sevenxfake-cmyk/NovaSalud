@@ -8,6 +8,7 @@ import { migrate, health } from "../server/schema.js";
 import { getSnapshot, saveProduct, registerSale } from "../server/store.js";
 import { publicError } from "../server/errors.js";
 import { demoProducts } from "../src/data/demo.js";
+import { seedPresentation } from "../server/demo-seed.js";
 
 let dom;
 let server;
@@ -332,4 +333,35 @@ test("interfaz: no anuncia Turso conectado si la consulta real falla", async () 
   );
   assert.match(get(".connection-label").textContent, /Sin conexión verificada/);
   assert.equal(document.querySelector(".metric-grid") === null, true);
+});
+
+test("interfaz: abre una boleta de demostración y prepara su impresión sin ocultar la marca fiscal", async () => {
+  await seedPresentation(database);
+  await act(async () => {
+    window.dispatchEvent(new window.Event("focus"));
+    await new Promise((resolve) => setTimeout(resolve, 30));
+  });
+  await click('.sidebar nav a[href="/historial"]');
+  const receipt = [...document.querySelectorAll("button.sale-id")].find(
+    (button) => button.textContent === "DEMO-B001-000001",
+  );
+  assert.ok(receipt);
+  await click(receipt);
+  assert.match(get(".sale-receipt").textContent, /BOLETA DE DEMOSTRACIÓN/);
+  assert.match(get(".sale-receipt").textContent, /SIN VALIDEZ FISCAL/);
+  assert.match(get(".receipt-total").textContent, /64[.,]90/);
+  const previousPrint = window.print;
+  let calls = 0;
+  window.print = () => {
+    calls++;
+  };
+  try {
+    await click('[role="dialog"] .modal-actions .btn-outline-primary');
+    assert.equal(calls, 1);
+    assert.equal(document.body.classList.contains("receipt-print"), true);
+    window.dispatchEvent(new window.Event("afterprint"));
+    assert.equal(document.body.classList.contains("receipt-print"), false);
+  } finally {
+    window.print = previousPrint;
+  }
 });
