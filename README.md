@@ -1,185 +1,239 @@
-# NOVA SALUD
+# 💊 NOVA SALUD
 
-Sistema de gestión de botica · Trabajo final SENATI, PIAD-527.
+**Tu botica organizada, desde cualquier lugar.**
 
-Inventario, alertas y ventas conectados a **Turso Cloud** mediante una API Node compatible con Vercel Functions. Se conserva el diseño existente con React, Vite, Bootstrap 5 y React Router.
+Una aplicación web para gestionar medicamentos, controlar existencias y registrar ventas. Cada usuario tiene su propio inventario y puede continuar trabajando desde otra computadora: sus datos permanecen guardados en Turso.
 
-Repositorio: [sevenxfake-cmyk/NovaSalud](https://github.com/sevenxfake-cmyk/NovaSalud).
+🌐 **[Abrir NOVA SALUD](https://novasalud.vercel.app)** · [Guía para presentar el proyecto](docs/PRESENTACION.md) · [Documentación SENATI](docs/SENATI.md)
 
-Aplicación publicada: **[https://novasalud.vercel.app](https://novasalud.vercel.app)**. Cada persona puede registrarse con usuario y contraseña y recibe un inventario propio. Los productos, las ventas, el historial y las alertas están separados por cuenta.
+Desarrollado como trabajo final del curso **Fullstack Developer Software de SENATI · PIAD-527**.
 
-La barra superior incluye un botón Bootstrap de luna/sol para alternar entre modo nocturno y claro. Se recuerda la preferencia en ese navegador y se aplica desde la primera carga. El tema utiliza `data-bs-theme`; los datos del negocio continúan guardándose en Turso. Las boletas mantienen su presentación de papel al imprimir.
+## ✨ ¿Qué puedes hacer?
 
-## Ejecutar localmente
+- **Crear tu cuenta** con usuario y contraseña.
+- **Gestionar tu inventario:** registrar, buscar y editar medicamentos, precios y cantidades.
+- **Detectar faltantes:** alertas de productos con stock bajo o agotado.
+- **Registrar ventas:** seleccionar productos, ajustar cantidades y confirmar el total.
+- **Consultar el historial** y abrir o imprimir los comprobantes internos.
+- **Elegir modo claro o nocturno** con el botón de luna/sol de la barra superior.
 
-Usar Node 22.19 o posterior compatible con Vite; se verificó con Node 26.12.1. Desde la carpeta NOVA_SALUD:
+Cada cuenta nueva recibe **10 productos de demostración propios** y comienza sin ventas. Los cambios de una cuenta no afectan a las demás.
+
+> Las boletas de demostración son ejemplos académicos **sin validez fiscal**. El sistema no procesa pagos ni emite comprobantes electrónicos.
+
+## 🚀 Empieza a usarlo
+
+1. Entra a **[novasalud.vercel.app](https://novasalud.vercel.app)**.
+2. Selecciona **Crear cuenta**.
+3. Elige un usuario y una contraseña de entre **12 y 128 caracteres**. Repite la contraseña para confirmar.
+4. ¡Listo! Ya puedes explorar tu inventario y registrar tu primera venta.
+
+¿Ya tienes una cuenta? Selecciona **Iniciar sesión** y usa tus mismas credenciales.
+
+**Desde otra PC funciona igual:** abre el enlace e inicia sesión. Para utilizar la aplicación no necesitas entrar a GitHub, Turso ni Vercel, ni instalar Node.js en esa computadora.
+
+## 💾 Tus datos se conservan
+
+Los productos, las existencias y las ventas se guardan en **Turso Cloud**, no en la memoria del navegador.
+
+Puedes comprobarlo así:
+
+1. Registra un medicamento en **Inventario → Nuevo producto**.
+2. Espera el mensaje de guardado.
+3. Recarga la página: el medicamento seguirá allí.
+4. Registra una venta y consulta **Historial de ventas**.
+5. Cierra sesión y vuelve a entrar: recuperarás tus productos y movimientos.
+
+Si entras con la misma cuenta desde otro equipo, encontrarás el mismo inventario. Tu computadora de desarrollo puede estar apagada: Vercel ejecuta la aplicación y Turso conserva los registros.
+
+La etiqueta **Turso conectado** aparece después de completar una consulta real a la base de datos.
+
+## 🛠️ Tecnologías
+
+| Parte del sistema | Tecnologías                                        |
+| ----------------- | -------------------------------------------------- |
+| Interfaz          | React, JavaScript, JSX y Vite                      |
+| Diseño            | Bootstrap 5, Bootstrap Icons y CSS personalizado   |
+| Navegación        | React Router                                       |
+| Backend           | Node.js y API REST compatible con Vercel Functions |
+| Base de datos     | Turso Cloud y cliente oficial `@libsql/client`     |
+| Publicación       | GitHub y Vercel                                    |
+| Pruebas           | `node:test` y jsdom                                |
+
+## 💻 Ejecutarlo en tu equipo
+
+Necesitas **Node.js 22.19 o posterior compatible con Vite**. El proyecto se verificó con Node 26.12.1.
+
+### 1. Descarga e instala
 
 ```powershell
+git clone https://github.com/sevenxfake-cmyk/NovaSalud.git
+cd NovaSalud
 npm.cmd ci
-npm.cmd run db:migrate
-npm.cmd run db:check
-npm.cmd run dev
 ```
 
-Abrir la URL indicada por Vite, normalmente [http://127.0.0.1:5173](http://127.0.0.1:5173).
+Si ya tienes la carpeta `NOVA_SALUD`, abre una terminal dentro de ella.
 
-Si otro servidor ocupa el puerto 5173, ejecutar `npm.cmd run dev -- --port 5174` y abrir la dirección nueva. Reiniciar el proceso de desarrollo después de cambiar las variables privadas; una instancia iniciada anteriormente puede conservar la configuración antigua.
+### 2. Configura la conexión
 
-`npm.cmd run dev` inicia **frontend y funciones API en un solo proceso**, mediante middleware de Vite que reutiliza los manejadores del backend. No hace falta una segunda terminal, Express, Vercel CLI ni un archivo SQLite local.
-
-Se utiliza `npm.cmd` para evitar el bloqueo de `npm.ps1` en la política actual de PowerShell. Los comandos de servidor utilizan `--use-system-ca` para validar TLS con los certificados del sistema; no se desactiva la validación.
-
-### Configuración privada
-
-El archivo `.env.local` debe contener:
+Copia `.env.example` a `.env.local` y completa estos valores con las credenciales de tu base de Turso:
 
 ```dotenv
 TURSO_DATABASE_URL=
 TURSO_AUTH_TOKEN=
 ```
 
-Completar los valores reales en el equipo, tomando como plantilla `.env.example`. No pegarlos en el chat, no publicarlos en GitHub y no utilizar el prefijo `VITE_`. La aplicación solo acepta una conexión remota segura `libsql://` o `https://`. Las credenciales se leen únicamente en el servidor.
+🔒 **Guarda estas credenciales solo en el servidor.** No las publiques en GitHub, no las compartas por el chat y no uses el prefijo `VITE_`. `.env.local` está excluido de Git.
 
-`.env.local` ya está ignorado por Git. Comprobarlo con `git check-ignore .env.local`. `git ls-files -- .env.local` debe devolver una salida vacía.
-
-### Primer acceso
-
-Abrir el enlace y seleccionar **Crear cuenta**. Elegir un usuario único, una contraseña de 12 a 128 caracteres y repetirla para confirmar. El registro inicia sesión y crea 10 productos de demostración independientes, sin copiar ventas ni registros privados de otras cuentas.
-
-Cada persona administra únicamente su propio inventario. Dos cuentas pueden usar el mismo código de medicamento y mantener cantidades y precios diferentes. Al entrar desde otra PC con las mismas credenciales se recuperan los datos de esa cuenta. Los usuarios anteriores conservan su contraseña y sus registros; no necesitan volver a registrarse.
-
-Las contraseñas se guardan con scrypt y sal aleatoria. Las sesiones duran 8 horas, utilizan una cookie HttpOnly y SameSite=Strict, y guardan en SQL únicamente el hash del token. En producción la cookie también usa Secure. No se necesita `SESSION_SECRET` para este esquema de sesiones opacas.
-
-## Probar que los medicamentos persisten
-
-1. Ejecutar los comandos anteriores y acceder a la aplicación.
-2. Seleccionar Crear cuenta o iniciar sesión con una cuenta existente.
-3. Ir a **Inventario → Nuevo producto** y registrar un medicamento con código único, nombre, presentación, precio y existencias.
-4. Esperar la confirmación **Producto guardado permanentemente en Turso**.
-5. Recargar la página: el medicamento debe seguir en la tabla.
-6. Editar el stock o precio, guardar y recargar otra vez.
-7. Detener Vite con Ctrl+C, ejecutar de nuevo `npm.cmd run dev` e iniciar sesión si fuera necesario: el registro debe conservarse.
-
-Las migraciones **no insertan medicamentos ni ventas de demostración**. Para la presentación se cargaron explícitamente 9 productos y 6 boletas de ejemplo en Turso, conservando el producto que ya había registrado el propietario. Los ejemplos llevan la marca Demo y permanecen al recargar. El frontend no inventa registros si falla la API; muestra el error.
-
-Para reproducir esta carga de forma explícita:
+### 3. Prepara la base e inicia la aplicación
 
 ```powershell
-npm.cmd run db:seed-demo
+npm.cmd run db:migrate
+npm.cmd run db:check
+npm.cmd run dev
 ```
 
-El comando no duplica las boletas ni restablece el stock al repetirlo. Los detalles y la lista de ejemplos están en [DATOS_DEMO.md](docs/DATOS_DEMO.md). Las boletas se pueden abrir desde Historial y usar **Imprimir boleta**. Son documentos académicos sin validez fiscal.
+Abre la dirección que indique Vite, normalmente **[http://127.0.0.1:5173](http://127.0.0.1:5173)**.
 
-**Turso conectado** se muestra únicamente después de que `/api/health` complete una consulta real a la base de datos. Tener variables de entorno configuradas no basta para mostrar ese estado.
+Si el puerto está ocupado:
 
-## Probar una venta
-
-1. Registrar un producto con una unidad de stock.
-2. Ir a **Nueva venta**, añadir esa presentación y confirmar el total.
-3. El servidor consulta sus precios actuales, valida cantidades y guarda la cabecera, el detalle y el descuento de stock en una transacción.
-4. Consultar historial e inventario: debe existir una venta y quedar stock cero.
-5. El producto agotado no se puede añadir de nuevo. Si otro usuario agotó el stock antes, el servidor rechaza la operación con HTTP 409.
-6. Una venta fallida no deja cabecera, detalles ni descuentos parciales.
-
-Los importes se almacenan en céntimos enteros. La unidad de stock corresponde a la presentación completa indicada en el producto. El medio de pago es informativo: no se procesa un pago ni se emite un comprobante fiscal.
-
-## Seguridad y consistencia
-
-- Consultas parametrizadas y restricciones SQL de unicidad, tipos, importes y existencias.
-- Roles: administrador para registrar/editar inventario; administrador o vendedor para consultar y vender.
-- El alcance de cualquier rol es su propia cuenta: la API toma el propietario desde la sesión, nunca desde un campo enviado por el navegador. Las claves foráneas compuestas impiden mezclar productos y detalles de distintas cuentas.
-- Registro con catálogo inicial atómico, confirmación de contraseña y límite temporal de registros por conexión.
-- Validación de origen y contenido JSON para modificar datos.
-- Protección temporal tras cinco intentos fallidos de contraseña.
-- Descuento condicionado a `stock >= cantidad` en una transacción de escritura.
-- Rollback completo si falla cualquier paso, incluso después del descuento.
-- Clave idempotente para que el reintento de una venta no duplique registros.
-- Verificación del total confirmado para detectar precios cambiados por otro usuario.
-- Versión del producto para evitar que una edición antigua sobrescriba existencias descontadas por una venta.
-- Errores públicos sin SQL, tokens, URL privada ni detalles internos.
-- Datos persistentes en Turso; no se utiliza localStorage como base de datos.
-
-## Rutas y API
-
-| Pantalla              | Ruta          |
-| --------------------- | ------------- |
-| Resumen general       | `/`           |
-| Inventario            | `/inventario` |
-| Alertas de reposición | `/alertas`    |
-| Nueva venta           | `/ventas`     |
-| Historial y detalle   | `/historial`  |
-
-| Endpoint        | Métodos           | Acceso                                                                  |
-| --------------- | ----------------- | ----------------------------------------------------------------------- |
-| `/api/health`   | GET               | Verificación pública sin datos privados.                                |
-| `/api/auth`     | GET, POST, DELETE | Sesión, alta inicial local, acceso y salida.                            |
-| `/api/state`    | GET               | Inventario e historial coherentes, con sesión.                          |
-| `/api/products` | GET, POST, PATCH  | Lectura autenticada; escritura de administrador. Edición con `?id=...`. |
-| `/api/sales`    | GET, POST         | Consulta y registro transaccional autenticados.                         |
-
-## Estructura
-
-```text
-api/             Entradas de Vercel Functions
-server/          Cliente privado, esquema, sesiones, HTTP y servicios SQL
-scripts/         Migraciones y comprobaciones sin revelar credenciales
-src/components/  Componentes y formularios existentes; acceso y conexión
-src/context/     Carga y operaciones asíncronas mediante API
-src/lib/         Cliente HTTP público, formatos y validaciones
-src/pages/       Cinco pantallas existentes
-src/data/        Fixtures para pruebas y carga explícita del catálogo académico
-tests/           Pruebas SQL, HTTP, interfaz y reglas
-docs/            Documentación SENATI y verificaciones
-vercel.json      Build y rutas frontend sin interceptar /api
+```powershell
+npm.cmd run dev -- --port 5174
 ```
 
-`@libsql/client` se importa en el servidor y en pruebas, nunca en componentes React ni en el cliente HTTP público.
+El comando de desarrollo inicia **la interfaz y la API en un solo proceso**. Reinicia ese proceso cuando cambies las variables privadas.
 
-## Verificaciones
+> En Windows usamos `npm.cmd` para evitar el bloqueo de `npm.ps1` en PowerShell. Los comandos del servidor utilizan los certificados del sistema mediante `--use-system-ca`, manteniendo la validación TLS.
+
+## 🧪 Verificar el proyecto
+
+Las comprobaciones locales no utilizan tu base remota:
 
 ```powershell
 npm.cmd test
 npm.cmd run lint
 npm.cmd run build
 npm.cmd run check:private
-npm.cmd run test:remote
-npm.cmd run test:public -- https://novasalud.vercel.app
 ```
 
-`npm test` ejecuta **42 pruebas** secuenciales con límite de memoria: aislamiento de cuentas, registro, SQL, HTTP, formularios, tema persistente, carga de ejemplos, migraciones, boletas y reglas. No utiliza la base remota ni sus credenciales.
+La suite incluye **42 pruebas** de registro, separación de cuentas, inventario, ventas, migraciones, formularios, boletas y modo nocturno. Se ejecutan de forma secuencial y con límites de memoria y tiempo.
 
-`npm.cmd run test:accounts -- https://novasalud.vercel.app` comprueba el registro real de dos cuentas temporales, sus catálogos separados, el rechazo de IDs ajenos y la recuperación de datos al iniciar sesión de nuevo. Retira únicamente esas cuentas y sus registros al finalizar.
+<details>
+<summary>Ver pruebas contra Turso y el sitio publicado</summary>
 
-`test:remote` es una comprobación **explícita contra Turso**. Crea un medicamento y un usuario técnicos temporales, verifica alta/edición, lectura con otro cliente, rollback, stock insuficiente, dos ventas simultáneas e idempotencia. Al finalizar retira exclusivamente los registros de esa ejecución. No borra medicamentos del usuario.
+Estas comprobaciones sí acceden a servicios reales y crean registros técnicos temporales. Al terminar, retiran únicamente los registros de su propia ejecución.
 
-La prueba remota pasó contra la base configurada. Las operaciones de red pueden fallar: la interfaz conserva el error y permite reintentar una venta con su clave idempotente.
+```powershell
+npm.cmd run test:remote
+npm.cmd run test:public -- https://novasalud.vercel.app
+npm.cmd run test:accounts -- https://novasalud.vercel.app
+```
 
-`check:private` comprueba la exclusión de entornos privados y busca las credenciales reales y el SDK en el frontend compilado, sin mostrar esos valores.
+La prueba de cuentas registra dos usuarios temporales y verifica que no puedan editar ni vender productos ajenos. También comprueba que cada uno recupere su inventario al volver a iniciar sesión.
 
-## Publicación en Vercel
+Consulta los resultados, alcances y límites en [PRUEBAS.md](docs/PRUEBAS.md).
 
-Para usar la CLI sin instalarla globalmente: `npm.cmd run vercel -- login`. Completar el inicio de sesión personalmente en el navegador. Después se pueden ejecutar comandos con `npm.cmd run vercel -- <comando>`. Este asistente conserva la validación TLS con certificados del sistema y obtiene la CLI desde npm.
+</details>
 
-1. Importar el repositorio en Vercel usando la configuración Vite.
-2. Configurar `TURSO_DATABASE_URL` y `TURSO_AUTH_TOKEN` como variables privadas del proyecto.
-3. Ejecutar las migraciones contra esa base y comprobar el registro desde el enlace público.
-4. Build: `npm run build`; salida: `dist`. Las funciones están en `api/`.
-5. Confirmar la conexión en `/api/health`, la recarga de rutas y los flujos de acceso, inventario y ventas.
+## 📁 Estructura del proyecto
 
-No se almacena SQLite modificable en Vercel. El proyecto `sevenxfake/novasalud` está publicado y conectado al repositorio de GitHub, rama `main`. Las variables de Turso están configuradas como secretos de Production. Se verificaron los flujos de la API y las rutas directas en el dominio público, sin depender de un servidor local.
+```text
+api/              Funciones API para Vercel
+server/           Conexión privada, sesiones, validaciones y servicios SQL
+scripts/          Migraciones, carga de ejemplos y verificaciones
+src/components/   Formularios, navegación y componentes reutilizables
+src/context/      Estado de la aplicación y comunicación con la API
+src/lib/          Formatos, validaciones y cliente HTTP
+src/pages/        Resumen, inventario, alertas, ventas e historial
+src/data/         Datos académicos para pruebas y catálogos iniciales
+tests/            Pruebas automatizadas
+docs/             Documentación técnica y guía de presentación
+vercel.json       Configuración de publicación y rutas
+```
 
-La migración 3 conserva una copia SQL del esquema anterior en `_nova_backup_v2_*`, copia sus registros a `productos_cuenta`, `ventas_cuenta` y `detalle_cuenta`, comprueba cantidades y relaciones y retira las tablas operativas antiguas en una transacción. Las funciones antiguas sin filtro fallan de forma cerrada, sin poder consultar los nuevos inventarios. Las copias de respaldo no están expuestas por la API.
+<details>
+<summary>Seguridad, API y funcionamiento de las ventas</summary>
 
-`test:public` verifica el despliegue mediante peticiones HTTPS reales. Crea una cuenta y un medicamento técnicos temporales, prueba sesión segura, alta/edición, nuevas lecturas, venta, historial, idempotencia, concurrencia, rutas y salida. Al finalizar retira exclusivamente los registros de esa ejecución y no conserva una cuenta de prueba.
+### Protección de las cuentas
 
-Consultar [la guía de presentación desde otra PC](docs/PRESENTACION.md) para preparar el enlace y demostrar la persistencia.
+- Contraseñas con hash **scrypt** y sal aleatoria.
+- Sesiones de 8 horas con cookies **HttpOnly**, **SameSite=Strict** y **Secure** en producción.
+- Inventario e historial filtrados por el usuario de la sesión.
+- Roles limitados al inventario de su propia cuenta.
+- Validación del servidor, consultas parametrizadas y restricciones SQL.
+- Claves foráneas compuestas para impedir referencias entre cuentas.
+- Límites temporales de registros e intentos de acceso.
+- Errores públicos sin credenciales ni detalles internos.
 
-## Documentación y GitHub
+El cliente SQL se utiliza únicamente en el backend. El navegador guarda en localStorage solo la preferencia visual del tema.
 
-- [Documentación SENATI](docs/SENATI.md)
-- [Pruebas y límites](docs/PRUEBAS.md)
+### Ventas consistentes
+
+El servidor consulta los precios actuales, valida las cantidades y registra la venta, sus detalles y el descuento de stock **en una misma transacción**. Si algo falla, revierte la operación completa.
+
+Una clave idempotente evita duplicar la venta al reintentar. El control de versiones impide que una edición antigua sobrescriba existencias ya modificadas.
+
+Los importes se almacenan en céntimos enteros. Cada unidad de stock corresponde a la presentación indicada en el producto; el medio de pago es informativo.
+
+### Endpoints
+
+| Endpoint        | Métodos           | Función                                            |
+| --------------- | ----------------- | -------------------------------------------------- |
+| `/api/health`   | GET               | Comprobar la conexión y el esquema                 |
+| `/api/auth`     | GET, POST, DELETE | Registro, inicio y cierre de sesión                |
+| `/api/state`    | GET               | Recuperar los datos de la cuenta                   |
+| `/api/products` | GET, POST, PATCH  | Consultar, registrar y editar medicamentos propios |
+| `/api/sales`    | GET, POST         | Consultar y registrar ventas propias               |
+
+</details>
+
+<details>
+<summary>Despliegue, migraciones y datos de demostración</summary>
+
+### Publicación en Vercel
+
+El proyecto está conectado a la rama `main` de este repositorio. La configuración utiliza:
+
+- Framework: **Vite**.
+- Build: `npm run build`.
+- Carpeta de salida: `dist`.
+- Funciones: `api/`.
+- Variables privadas de Production: `TURSO_DATABASE_URL` y `TURSO_AUTH_TOKEN`.
+
+Para autenticar la CLI:
+
+```powershell
+npm.cmd run vercel -- login
+```
+
+Completa la autorización personalmente en el navegador. Después puedes usar `npm.cmd run vercel -- <comando>`.
+
+### Migraciones
+
+`npm.cmd run db:migrate` prepara o actualiza el esquema. La migración de inventarios individuales conserva respaldos SQL en `_nova_backup_v2_*`, verifica las relaciones y traslada los registros a las tablas privadas por cuenta. Esos respaldos no están expuestos por la API.
+
+Los usuarios anteriores conservan sus credenciales y registros. No se almacena un archivo SQLite modificable dentro de Vercel Functions.
+
+### Ejemplos académicos
+
+El registro de una cuenta crea automáticamente sus diez productos de ejemplo. La carga histórica de boletas del propietario original puede reproducirse con:
+
+```powershell
+npm.cmd run db:seed-demo
+```
+
+Este comando está pensado para el operador del proyecto: carga los ejemplos del administrador original, no los de la cuenta abierta en el navegador. No duplica las boletas ni restablece el stock al repetirlo.
+
+Consulta el catálogo y sus importes en [DATOS_DEMO.md](docs/DATOS_DEMO.md).
+
+</details>
+
+## 📚 Documentación SENATI
+
+- [Problema, objetivos, arquitectura y modelo de datos](docs/SENATI.md)
+- [Guía para presentar desde otra computadora](docs/PRESENTACION.md)
+- [Pruebas y limitaciones](docs/PRUEBAS.md)
+- [Productos y boletas de demostración](docs/DATOS_DEMO.md)
 - [Historial de cambios](CHANGELOG.md)
 
-Para subir cambios posteriores, revisar `git status`, seleccionar archivos, crear un commit descriptivo y ejecutar `git push origin main`. Los entornos privados y archivos generados permanecen excluidos.
-
-Falta el contenido literal de las cinco preguntas guía PIAD-527 para responderlas sin inventarlas. El nombre del proyecto se mantiene como NOVA SALUD.
+Las cinco preguntas guía del documento PIAD-527 siguen pendientes de su contenido literal para responderlas fielmente. El proyecto conserva el nombre **NOVA SALUD**.
