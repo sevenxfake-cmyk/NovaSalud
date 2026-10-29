@@ -32,7 +32,7 @@ export default function AuthPanel() {
     }
   }
   return (
-    <section className="card panel mx-auto my-4" style={{ maxWidth: 480 }}>
+    <section className="card panel auth-panel">
       <div className="panel-heading">
         <div>
           <h1 className="h5 mb-2">
@@ -73,7 +73,7 @@ export default function AuthPanel() {
             </button>
           ))}
         </div>
-        <form onSubmit={submit}>
+        <form className="auth-form-transition" key={registering ? "register" : "login"} onSubmit={submit}>
           {error && (
             <div className="alert alert-danger" role="alert">
               {error}
@@ -113,8 +113,7 @@ export default function AuthPanel() {
               disabled={busy}
             />
             <div className="form-text">
-              Entre 12 y 128 caracteres. El servidor conserva únicamente un hash
-              seguro.
+              Usa entre 12 y 128 caracteres.
             </div>
           </div>
           {registering && (

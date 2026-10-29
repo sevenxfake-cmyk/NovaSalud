@@ -9,7 +9,7 @@ import {
 import { usePharmacy } from "../context/pharmacy";
 import { stockStatus, dateLabel } from "../lib/format";
 import { Icon } from "./UI";
-import AuthPanel from "./AuthPanel";
+import AccessScreen from "./AccessScreen";
 import ThemeToggle from "./ThemeToggle";
 import "../theme.css";
 
@@ -44,11 +44,12 @@ export default function Layout() {
   ).length;
   useEffect(() => {
     const page =
-      links.find((link) => link.to === location.pathname)?.label ??
+      !user ? "Accede a tu cuenta" : links.find((link) => link.to === location.pathname)?.label ??
       "Página no encontrada";
     document.title = `${page} · NOVA SALUD`;
     document.getElementById("main-content")?.focus({ preventScroll: true });
-  }, [location.pathname]);
+  }, [location.pathname, user]);
+  if (!user) return <AccessScreen />;
   return (
     <div className="app-shell">
       <a className="skip-link" href="#main-content">
@@ -188,7 +189,10 @@ export default function Layout() {
               <button
                 className="icon-button"
                 aria-label="Cerrar sesión"
-                onClick={logout}
+                onClick={() => {
+                  setMenuOpen(false);
+                  logout();
+                }}
               >
                 <Icon name="box-arrow-right" />
               </button>
@@ -254,7 +258,9 @@ export default function Layout() {
               )}
               {connection === "connected" &&
                 schemaReady &&
-                (user ? <Outlet /> : <AuthPanel />)}
+                <div className="page-transition" key={location.pathname}>
+                  <Outlet />
+                </div>}
             </>
           )}
         </main>

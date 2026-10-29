@@ -116,7 +116,7 @@ npm.cmd run build
 npm.cmd run check:private
 ```
 
-La suite incluye **44 pruebas** de registro, separación de cuentas, inventario, ventas, migraciones, formularios, boletas y modo nocturno. Se ejecutan de forma secuencial y con límites de memoria y tiempo.
+La suite incluye **45 pruebas** de registro, separación de cuentas, inventario, ventas, migraciones, formularios, boletas y modo nocturno. Se ejecutan de forma secuencial y con límites de memoria y tiempo.
 
 <details>
 <summary>Ver pruebas contra Turso y el sitio publicado</summary>

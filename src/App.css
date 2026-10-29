@@ -1,6 +1,105 @@
 .app-shell {
   min-height: 100vh;
 }
+.access-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(ellipse at 50% 20%, rgba(65, 132, 235, 0.09), transparent 65%);
+}
+.access-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 26px clamp(16px, 4vw, 64px);
+}
+.access-main {
+  flex: 1;
+  width: 100%;
+  max-width: 540px;
+  margin: auto;
+  padding: 28px 20px 40px;
+}
+.access-intro {
+  text-align: center;
+  margin-bottom: 28px;
+  animation: nova-enter 420ms ease-out both;
+}
+.access-emblem {
+  display: inline-grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 18px;
+  border-radius: 16px;
+  color: var(--brand);
+  background: rgba(65, 132, 235, 0.1);
+  font-size: 25px;
+}
+.access-tagline {
+  color: var(--ink);
+  font-size: clamp(24px, 4vw, 30px);
+  line-height: 1.3;
+  font-weight: 650;
+  letter-spacing: -0.6px;
+  margin-bottom: 0;
+}
+.auth-panel {
+  width: 100%;
+  margin: 0;
+  border-radius: 16px;
+  box-shadow: 0 16px 48px rgba(15, 42, 80, 0.07);
+  animation: nova-enter 420ms 70ms ease-out both;
+}
+.access-status {
+  padding: 28px;
+  text-align: center;
+  color: var(--muted);
+}
+.access-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 24px;
+  padding: 20px;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+}
+.page-transition {
+  animation: nova-enter 280ms ease-out both;
+}
+.auth-form-transition {
+  animation: nova-fade 200ms ease-out;
+}
+.modal-surface {
+  animation: nova-fade 180ms ease-out;
+}
+.modal-surface .modal-content {
+  animation: nova-enter 240ms ease-out;
+}
+.notification-toast {
+  animation: nova-enter 240ms ease-out;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .btn, .icon-button, .auth-panel .nav-link {
+    transition: background-color 160ms ease, border-color 160ms ease,
+      box-shadow 160ms ease, transform 160ms ease;
+  }
+  .btn:active:not(:disabled), .icon-button:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+}
+@keyframes nova-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes nova-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 .sidebar {
   width: 250px;
   position: fixed;

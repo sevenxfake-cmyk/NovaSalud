@@ -245,6 +245,10 @@ test("interfaz: permite registrarse y abre el inventario personal sin datos de l
     minStock: 1,
   });
   await click('button[aria-label="Cerrar sesión"]');
+  assert.equal(document.querySelector(".sidebar"), null);
+  assert.equal(document.querySelector(".topbar"), null);
+  assert.equal(document.querySelector(".global-search"), null);
+  assert.ok(get(".access-shell"));
   const register = [...document.querySelectorAll("button")].find(
     (button) => button.textContent === "Crear cuenta",
   );
@@ -267,12 +271,42 @@ test("interfaz: permite registrarse y abre el inventario personal sin datos de l
     });
   }
   assert.match(get("h1").textContent, /Todo listo/);
+  assert.ok(get(".sidebar"));
+  assert.equal(document.querySelector(".access-shell"), null);
   await click('.sidebar nav a[href="/inventario"]');
   assert.equal(document.querySelectorAll("tbody tr").length, 10);
   assert.doesNotMatch(get("tbody").textContent, /Producto exclusivo anterior/);
   assert.ok(
     (await getSnapshot(database)).products.every((product) => product.demo),
   );
+});
+
+test("interfaz: oculta el panel durante la comprobación inicial, sin sesión y al abrir una ruta privada", async () => {
+  await act(async () => root.unmount());
+  activeUser = null;
+  window.history.replaceState({}, "", "/inventario");
+  const originalMock = globalThis.fetch;
+  let releaseHealth;
+  const pendingHealth = new Promise((resolve) => { releaseHealth = resolve; });
+  globalThis.fetch = async (path, options) => {
+    if (path === "/api/health") await pendingHealth;
+    return originalMock(path, options);
+  };
+  root = createRoot(container);
+  await act(async () => root.render(createElement(App)));
+  assert.equal(document.querySelector(".sidebar"), null);
+  assert.equal(document.querySelector(".topbar"), null);
+  assert.match(get('[role="status"]').textContent, /Verificando tu sesión/);
+  await act(async () => {
+    releaseHealth();
+    await new Promise((resolve) => setTimeout(resolve, 40));
+  });
+  assert.ok(get("#login-user"));
+  assert.equal(document.querySelector(".sidebar"), null);
+  assert.equal(document.querySelector(".global-search"), null);
+  assert.match(document.title, /Accede a tu cuenta/);
+  await click('button[aria-label="Activar modo nocturno"]');
+  assert.equal(document.documentElement.getAttribute("data-bs-theme"), "dark");
 });
 
 test("interfaz: el tema nocturno de Bootstrap permanece al navegar y volver a montar la aplicación", async () => {
@@ -418,11 +452,10 @@ test("interfaz: no anuncia Turso conectado si la consulta real falla", async () 
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve, 20));
   });
-  assert.equal(
-    get(".connection-label").textContent.includes("Turso conectado"),
-    false,
-  );
-  assert.match(get(".connection-label").textContent, /Sin conexión verificada/);
+  assert.doesNotMatch(container.textContent, /Turso conectado/);
+  assert.match(get('[role="alert"]').textContent, /Conexión no disponible/);
+  assert.equal(document.querySelector(".sidebar"), null);
+  assert.equal(document.querySelector(".topbar"), null);
   assert.equal(document.querySelector(".metric-grid") === null, true);
 });
 
