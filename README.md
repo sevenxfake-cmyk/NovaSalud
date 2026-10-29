@@ -116,7 +116,7 @@ npm.cmd run build
 npm.cmd run check:private
 ```
 
-La suite incluye **42 pruebas** de registro, separación de cuentas, inventario, ventas, migraciones, formularios, boletas y modo nocturno. Se ejecutan de forma secuencial y con límites de memoria y tiempo.
+La suite incluye **44 pruebas** de registro, separación de cuentas, inventario, ventas, migraciones, formularios, boletas y modo nocturno. Se ejecutan de forma secuencial y con límites de memoria y tiempo.
 
 <details>
 <summary>Ver pruebas contra Turso y el sitio publicado</summary>
@@ -207,6 +207,10 @@ npm.cmd run vercel -- login
 ```
 
 Completa la autorización personalmente en el navegador. Después puedes usar `npm.cmd run vercel -- <comando>`.
+
+### Consultar la base de datos
+
+En Turso puedes usar `consulta_inventario`, `consulta_ventas`, `consulta_detalle_ventas` y `consulta_resumen_cuentas` para ver cuentas, medicamentos, importes en soles y fechas de Perú. Ejecuta `SELECT * FROM guia_base_datos` para identificar cada tabla y vista. Consulta los ejemplos y las relaciones en la [guía de la base de datos](docs/BASE_DE_DATOS.md).
 
 ### Migraciones
 

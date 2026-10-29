@@ -1,7 +1,8 @@
 import { inTransaction } from "./db.js";
 import { migrateAccounts } from "./account-schema.js";
+import { migrateReadableViews } from "./readable-schema.js";
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 const statements = [
   `CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)`,
@@ -67,9 +68,12 @@ export async function migrate(db, { legacyOnly = false } = {}) {
   if (exists.rows.length) {
     const current = await db.execute({
       sql: "SELECT version FROM schema_migrations WHERE version=?",
-      args: [SCHEMA_VERSION],
+      args: [3],
     });
-    if (current.rows.length) return;
+    if (current.rows.length) {
+      if (!legacyOnly) await migrateReadableViews(db);
+      return;
+    }
   }
   await db.batch(
     [
@@ -104,7 +108,10 @@ export async function migrate(db, { legacyOnly = false } = {}) {
       args: [2, new Date().toISOString()],
     });
   });
-  if (!legacyOnly) await migrateAccounts(db);
+  if (!legacyOnly) {
+    await migrateAccounts(db);
+    await migrateReadableViews(db);
+  }
 }
 
 export async function health(db) {
