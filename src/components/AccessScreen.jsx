@@ -21,6 +21,11 @@ export default function AccessScreen() {
           <p className="eyebrow">TU BOTICA, MEJOR CONECTADA</p>
           <p className="access-tagline">Cuidamos tu gestión.<br />Tú cuidas de los demás.</p>
         </div>
+        {import.meta.env.DEV && import.meta.env.MODE === "ui-demo" && (
+          <p className="alert alert-info small" role="status">
+            Modo diseño: el acceso es simulado. No ingreses contraseñas reales.
+          </p>
+        )}
         {loading ? (
           <div className="access-status" role="status">
             <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />

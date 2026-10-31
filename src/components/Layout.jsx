@@ -21,6 +21,8 @@ const links = [
   { to: "/alertas", label: "Alertas de stock", icon: "bell" },
 ];
 
+const uiDemo = import.meta.env.DEV && import.meta.env.MODE === "ui-demo";
+
 export default function Layout() {
   const {
     products,
@@ -203,11 +205,13 @@ export default function Layout() {
           <div className="demo-banner">
             <span>
               <Icon name="database-check" />{" "}
-              <strong>Inventario persistente</strong>
+              <strong>{uiDemo ? "Vista previa de diseño" : "Inventario persistente"}</strong>
               <span className="demo-explanation">
                 {" "}
-                · Los registros se almacenan en la base de datos de la botica.{" "}
-                {products.some((product) => product.demo) &&
+                {uiDemo
+                  ? "· Datos ficticios en memoria: al recargar se restablecen."
+                  : "· Los registros se almacenan en la base de datos de la botica."}{" "}
+                {!uiDemo && products.some((product) => product.demo) &&
                   "Incluye ejemplos académicos."}
               </span>
             </span>
@@ -228,8 +232,10 @@ export default function Layout() {
                     : undefined
                 }
               />
-              {connection === "connected"
-                ? "Turso conectado"
+              {uiDemo
+                ? "Modo diseño sin Turso"
+                : connection === "connected"
+                  ? "Turso conectado"
                 : connection === "checking"
                   ? "Verificando conexión..."
                   : "Sin conexión verificada"}
