@@ -218,6 +218,104 @@
     background: #472d37;
     color: #ffb2bb;
   }
+  [data-bs-theme="dark"] .topbar {
+    background: rgba(27, 41, 60, 0.85);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  [data-bs-theme="dark"] .stock-level-bar {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  [data-bs-theme="dark"] .stock-level-fill.ok {
+    background: #8ee0b9;
+  }
+  [data-bs-theme="dark"] .stock-level-fill.low {
+    background: #f1cc7e;
+  }
+  [data-bs-theme="dark"] .stock-level-fill.out {
+    background: #ffb2bb;
+  }
+  [data-bs-theme="dark"] .quick-restock-btn {
+    border-color: rgba(120, 173, 255, 0.35);
+    color: #8bb9ff;
+  }
+  [data-bs-theme="dark"] .quick-restock-btn:hover {
+    background: rgba(120, 173, 255, 0.15);
+    border-color: #78adff;
+    color: #fff;
+  }
+  [data-bs-theme="dark"] .search-shortcut {
+    background: #24354c;
+    border-color: #374c69;
+    color: #a4b7d1;
+  }
+  [data-bs-theme="dark"] .search-results-dropdown {
+    background: #1b293c;
+    border-color: var(--line);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  }
+  [data-bs-theme="dark"] .search-dropdown-header,
+  [data-bs-theme="dark"] .search-dropdown-footer {
+    border-color: var(--line);
+    background: #172436;
+    color: #a3b4ce;
+  }
+  [data-bs-theme="dark"] .search-result-item:hover,
+  [data-bs-theme="dark"] .search-result-item:focus {
+    background: #22344b;
+  }
+  [data-bs-theme="dark"] .search-result-info strong {
+    color: #edf3fc;
+  }
+  [data-bs-theme="dark"] .search-result-price {
+    color: #8bb9ff;
+  }
+  [data-bs-theme="dark"] .chart-bar {
+    background: linear-gradient(180deg, #38bdf8 0%, #1d4ed8 100%);
+    box-shadow: 0 2px 12px rgba(56, 189, 248, 0.28);
+  }
+  [data-bs-theme="dark"] .chart-bar.today {
+    background: linear-gradient(180deg, #22d3ee 0%, #0284c7 55%, #1e40af 100%);
+    box-shadow: 0 4px 16px rgba(34, 211, 238, 0.42);
+  }
+  [data-bs-theme="dark"] .chart-tooltip {
+    background: #1e293b;
+    border: 1px solid #334155;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+  }
+  [data-bs-theme="dark"] .chart-tooltip::after {
+    border-top-color: #1e293b;
+  }
+  [data-bs-theme="dark"] button.sale-id {
+    background: rgba(120, 173, 255, 0.1);
+    border-color: rgba(120, 173, 255, 0.25);
+    color: #9bc2ff;
+  }
+  [data-bs-theme="dark"] button.sale-id:hover {
+    background: rgba(120, 173, 255, 0.22);
+    border-color: #78adff;
+    color: #fff;
+  }
+  [data-bs-theme="dark"] .demo-pill {
+    background: rgba(234, 179, 8, 0.15);
+    border-color: rgba(234, 179, 8, 0.32);
+    color: #f1cc7e;
+  }
+  [data-bs-theme="dark"] .payment-pill.cash {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border-color: rgba(34, 197, 94, 0.28);
+  }
+  [data-bs-theme="dark"] .payment-pill.wallet {
+    background: rgba(168, 85, 247, 0.15);
+    color: #c084fc;
+    border-color: rgba(168, 85, 247, 0.28);
+  }
+  [data-bs-theme="dark"] .payment-pill.card-pay {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border-color: rgba(59, 130, 246, 0.28);
+  }
   [data-bs-theme="dark"] .care-card {
     background: linear-gradient(130deg, #1d304b, #203a44);
     border-color: #30445d;

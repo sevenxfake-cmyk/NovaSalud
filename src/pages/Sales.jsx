@@ -18,8 +18,12 @@ export default function Sales() {
   const [category, setCategory] = useState("");
   const [payment, setPayment] = useState("Efectivo");
   const [confirming, setConfirming] = useState(false);
+  const [received, setReceived] = useState("");
   const [error, setError] = useState("");
-  const close = useCallback(() => setConfirming(false), []);
+  const close = useCallback(() => {
+    setConfirming(false);
+    setReceived("");
+  }, []);
   const filtered = products.filter(
     (product) =>
       matchesProduct(product, query) &&
@@ -264,6 +268,80 @@ export default function Sales() {
             cantidades del inventario. Medio de pago: <strong>{payment}</strong>
             .
           </p>
+          {payment === "Efectivo" && (
+            <div className="card p-3 mb-3 border bg-body-tertiary">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <span className="small fw-semibold">
+                  <Icon name="cash-coin" /> Cobro en efectivo y vuelto:
+                </span>
+                <span className="badge text-bg-light border">Billetes rápidos</span>
+              </div>
+              <div className="input-group input-group-sm mb-2">
+                <span className="input-group-text">Paga con S/</span>
+                <input
+                  type="number"
+                  step="0.50"
+                  min="0"
+                  className="form-control"
+                  placeholder="0.00"
+                  value={received}
+                  onChange={(event) => setReceived(event.target.value)}
+                />
+                {received && (
+                  <button
+                    className="btn btn-outline-secondary"
+                    type="button"
+                    onClick={() => setReceived("")}
+                  >
+                    <Icon name="x" />
+                  </button>
+                )}
+              </div>
+              <div className="d-flex flex-wrap gap-1 mb-2">
+                {[
+                  { label: "Exacto", val: (total / 100).toFixed(2) },
+                  { label: "S/ 10", val: "10" },
+                  { label: "S/ 20", val: "20" },
+                  { label: "S/ 50", val: "50" },
+                  { label: "S/ 100", val: "100" },
+                ].map((b) => (
+                  <button
+                    key={b.label}
+                    type="button"
+                    className={`btn btn-sm ${
+                      received === b.val
+                        ? "btn-primary"
+                        : "btn-outline-secondary"
+                    }`}
+                    style={{ fontSize: "11px", padding: "2px 8px" }}
+                    onClick={() => setReceived(b.val)}
+                  >
+                    {b.label}
+                  </button>
+                ))}
+              </div>
+              {Number(received) > 0 && (
+                <div
+                  className={`p-2 rounded d-flex justify-content-between align-items-center small ${
+                    Math.round(Number(received) * 100) >= total
+                      ? "bg-success-subtle text-success-emphasis border border-success-subtle"
+                      : "bg-warning-subtle text-warning-emphasis border border-warning-subtle"
+                  }`}
+                >
+                  <span className="fw-semibold">
+                    {Math.round(Number(received) * 100) >= total
+                      ? "Vuelto a entregar al cliente:"
+                      : "Monto insuficiente (falta):"}
+                  </span>
+                  <strong className="fs-6">
+                    {money(
+                      Math.abs(Math.round(Number(received) * 100) - total),
+                    )}
+                  </strong>
+                </div>
+              )}
+            </div>
+          )}
           <div className="alert alert-primary small">
             El servidor validará las existencias y guardará la venta completa en
             una transacción.

@@ -148,17 +148,20 @@ export default function History() {
                 {visible.map((sale) => (
                   <tr key={sale.id}>
                     <td>
-                      <button
-                        className="btn-link sale-id"
-                        onClick={() => setParams({ venta: sale.id })}
-                      >
-                        {sale.id}
-                      </button>
-                      {sale.demo && (
-                        <span className="badge text-bg-warning d-block mt-1">
-                          Demostración
-                        </span>
-                      )}
+                      <div className="d-flex flex-column align-items-start gap-1">
+                        <button
+                          className="btn-link sale-id"
+                          onClick={() => setParams({ venta: sale.id })}
+                        >
+                          <Icon name="receipt" className="opacity-75" />
+                          {sale.id}
+                        </button>
+                        {sale.demo && (
+                          <span className="demo-pill">
+                            <Icon name="mortarboard" /> Demo
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td>
                       <div className="date-cell">
@@ -167,11 +170,21 @@ export default function History() {
                       </div>
                     </td>
                     <td>
-                      {sale.items.reduce((sum, item) => sum + item.quantity, 0)}{" "}
-                      unid.
+                      <span className="fw-semibold">
+                        {sale.items.reduce((sum, item) => sum + item.quantity, 0)}{" "}
+                        unid.
+                      </span>
                     </td>
                     <td>
-                      <span className="payment-label">
+                      <span
+                        className={`payment-pill ${
+                          sale.payment === "Efectivo"
+                            ? "cash"
+                            : sale.payment === "Tarjeta"
+                              ? "card-pay"
+                              : "wallet"
+                        }`}
+                      >
                         <Icon
                           name={
                             sale.payment === "Efectivo"
@@ -194,11 +207,13 @@ export default function History() {
                     </td>
                     <td className="text-end">
                       <button
-                        className="icon-button"
+                        className="btn btn-outline-secondary btn-sm py-1 px-2 d-inline-flex align-items-center gap-1"
+                        style={{ fontSize: "11px" }}
                         aria-label={`Ver detalle de ${sale.id}`}
                         onClick={() => setParams({ venta: sale.id })}
                       >
                         <Icon name="eye" />
+                        <span className="d-none d-lg-inline">Ver</span>
                       </button>
                     </td>
                   </tr>

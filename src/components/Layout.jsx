@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Link,
   NavLink,
@@ -7,7 +7,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { usePharmacy } from "../context/pharmacy";
-import { stockStatus, dateLabel } from "../lib/format";
+import { stockStatus, dateLabel, normalize, money } from "../lib/format";
 import { Icon } from "./UI";
 import AccessScreen from "./AccessScreen";
 import ThemeToggle from "./ThemeToggle";
@@ -39,11 +39,44 @@ export default function Layout() {
     retry,
   } = usePharmacy();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const searchInputRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
   const alerts = products.filter(
     (product) => stockStatus(product) !== "ok",
   ).length;
+
+  useEffect(() => {
+    function handleGlobalKeys(event) {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      } else if (
+        event.key === "/" &&
+        !["INPUT", "TEXTAREA", "SELECT"].includes(
+          document.activeElement?.tagName,
+        )
+      ) {
+        event.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      }
+    }
+    window.addEventListener("keydown", handleGlobalKeys);
+    return () => window.removeEventListener("keydown", handleGlobalKeys);
+  }, []);
+
+  const searchResults = globalSearch.trim()
+    ? products
+        .filter((p) =>
+          normalize(`${p.name} ${p.code} ${p.category}`).includes(
+            normalize(globalSearch),
+          ),
+        )
+        .slice(0, 5)
+    : [];
   useEffect(() => {
     const page =
       !user ? "Accede a tu cuenta" : links.find((link) => link.to === location.pathname)?.label ??
@@ -148,23 +181,106 @@ export default function Layout() {
             </span>
           </div>
           <div className="topbar-right">
-            <form
-              className="global-search"
-              role="search"
-              onSubmit={(event) => {
-                event.preventDefault();
-                navigate("/inventario");
-              }}
-            >
-              <Icon name="search" />
-              <input
-                aria-label="Buscar en el inventario"
-                placeholder="Buscar un producto..."
-                value={globalSearch}
-                onChange={(event) => setGlobalSearch(event.target.value)}
-              />
-              <kbd>↵</kbd>
-            </form>
+            <div className="global-search-container">
+              <form
+                className="global-search"
+                role="search"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  setSearchFocused(false);
+                  navigate("/inventario");
+                }}
+              >
+                <Icon name="search" />
+                <input
+                  ref={searchInputRef}
+                  aria-label="Buscar en el inventario"
+                  placeholder="Buscar producto... (Ctrl + K)"
+                  value={globalSearch}
+                  onFocus={() => setSearchFocused(true)}
+                  onBlur={() => setTimeout(() => setSearchFocused(false), 220)}
+                  onChange={(event) => {
+                    setGlobalSearch(event.target.value);
+                    setSearchFocused(true);
+                  }}
+                />
+                <kbd
+                  className="search-shortcut"
+                  title="Presiona Ctrl + K o / para buscar"
+                >
+                  <span className="d-none d-md-inline">Ctrl </span>K
+                </kbd>
+              </form>
+              {searchFocused && globalSearch.trim().length > 0 && (
+                <div
+                  className="search-results-dropdown"
+                  onMouseDown={(event) => event.preventDefault()}
+                >
+                  <div className="search-dropdown-header">
+                    <span>Resultados rápidos</span>
+                    <small className="text-secondary">
+                      {searchResults.length} de {products.length}
+                    </small>
+                  </div>
+                  {searchResults.length ? (
+                    <div className="search-results-list">
+                      {searchResults.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          className="search-result-item"
+                          onClick={() => {
+                            setGlobalSearch(item.name);
+                            setSearchFocused(false);
+                            navigate("/inventario");
+                          }}
+                        >
+                          <div className="search-result-info">
+                            <strong>{item.name}</strong>
+                            <small>
+                              {item.code} · {item.presentation} ·{" "}
+                              {item.category}
+                            </small>
+                          </div>
+                          <div className="search-result-meta">
+                            <span className="search-result-price">
+                              {money(item.price)}
+                            </span>
+                            <span
+                              className={`badge ${
+                                item.stock === 0
+                                  ? "text-bg-danger"
+                                  : item.stock <= item.minStock
+                                    ? "text-bg-warning"
+                                    : "text-bg-success"
+                              }`}
+                            >
+                              {item.stock} unid.
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="search-empty-text">
+                      No hay productos que coincidan con &quot;{globalSearch}&quot;.
+                    </div>
+                  )}
+                  <div className="search-dropdown-footer">
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm w-100"
+                      onClick={() => {
+                        setSearchFocused(false);
+                        navigate("/inventario");
+                      }}
+                    >
+                      Ver en inventario completo ↵
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
             <ThemeToggle />
             <Link
               className="icon-button notification-button"
