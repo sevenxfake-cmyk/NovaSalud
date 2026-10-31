@@ -6,6 +6,7 @@
   "scripts": {
     "vercel": "node --use-system-ca scripts/vercel.js",
     "dev": "node --use-system-ca node_modules/vite/bin/vite.js",
+    "dev:ui": "node --use-system-ca node_modules/vite/bin/vite.js --mode ui-demo",
     "db:migrate": "node --use-system-ca scripts/database.js migrate",
     "db:check": "node --use-system-ca scripts/database.js check",
     "db:seed-demo": "node --use-system-ca scripts/seed-demo.js",
