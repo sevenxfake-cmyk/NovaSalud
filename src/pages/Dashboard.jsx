@@ -157,6 +157,10 @@ export default function Dashboard() {
               <div className="chart-bars">
                 {days.map((day, index) => (
                   <div className="chart-column" key={day.key}>
+                    <div className="chart-tooltip">
+                      <strong>{money(day.total)}</strong>
+                      <small>{dateLabel(day.date)}</small>
+                    </div>
                     <div
                       className={`chart-bar ${index === days.length - 1 ? "today" : ""}`}
                       title={`${dateLabel(day.date)}: ${money(day.total)}`}

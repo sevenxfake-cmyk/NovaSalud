@@ -155,27 +155,72 @@ export default function Inventory() {
                       {money(product.price)}
                     </td>
                     <td>
-                      <strong
-                        className={
-                          product.stock <= product.minStock ? "text-danger" : ""
-                        }
+                      <div>
+                        <strong
+                          className={
+                            product.stock <= product.minStock ? "text-danger" : ""
+                          }
+                        >
+                          {product.stock}
+                        </strong>
+                        <span className="unit-label"> unid.</span>
+                      </div>
+                      <div
+                        className="stock-level-bar"
+                        title={`Stock: ${product.stock} / Mínimo: ${product.minStock}`}
                       >
-                        {product.stock}
-                      </strong>
-                      <span className="unit-label"> unid.</span>
+                        <div
+                          className={`stock-level-fill ${
+                            product.stock === 0
+                              ? "out"
+                              : product.stock <= product.minStock
+                                ? "low"
+                                : "ok"
+                          }`}
+                          style={{
+                            width: `${
+                              product.stock === 0
+                                ? 0
+                                : Math.min(
+                                    100,
+                                    Math.max(
+                                      14,
+                                      Math.round(
+                                        (product.stock /
+                                          Math.max(product.minStock * 2, 10)) *
+                                          100,
+                                      ),
+                                    ),
+                                  )
+                            }%`,
+                          }}
+                        />
+                      </div>
                     </td>
                     <td className="text-secondary">{product.minStock}</td>
                     <td>
                       <StockBadge product={product} />
                     </td>
                     <td className="text-end">
-                      <button
-                        className="icon-button edit-button"
-                        aria-label={`Editar ${product.name}`}
-                        onClick={() => setEditing(product)}
-                      >
-                        <Icon name="pencil-square" />
-                      </button>
+                      <div className="d-inline-flex align-items-center justify-content-end gap-1">
+                        <button
+                          type="button"
+                          className="btn btn-outline-primary btn-sm quick-restock-btn d-none d-md-inline-flex align-items-center gap-1"
+                          title={`Reponer ${product.name}`}
+                          onClick={() => setEditing(product)}
+                        >
+                          <Icon name="plus-lg" /> Reponer
+                        </button>
+                        <button
+                          type="button"
+                          className="icon-button edit-button"
+                          aria-label={`Editar ${product.name}`}
+                          title={`Editar ${product.name}`}
+                          onClick={() => setEditing(product)}
+                        >
+                          <Icon name="pencil-square" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
